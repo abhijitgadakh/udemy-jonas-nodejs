@@ -1,0 +1,469 @@
+- Reading and Writing Files
+
+TO READ TEXT
+1. require fs module
+    const fs = require("fs");
+
+2. use readFileSync with path and text type
+    fs.readFileSync("./txt/input.txt", "utf-8");
+
+3. save it in variable
+    const textIn = fs.readFileSync("./txt/input.txt", "utf-8");
+
+
+TO WRITE TEXT
+1. use readFileSync with path and text/variable
+fs.writeFileSync("./txt/output.txt", textOut);
+
+==============================================================================
+- Blocking and Non-Blocking Asynchronous Nature of Node.js
+
+- Node js app runs on single thread
+
+- Synchronous code
+    each line of code executes only after the one before finished
+    because of this behaviour it is called as Blocking code
+
+- Asynchronous code
+heady code execution happens in backgroud and rest of the code keeps executing
+because of this behaviour it is called as Non- Blocking code
+
+- Callback Hell issue
+ solve this issue with using promises and Async/await
+
+==============================================================================
+
+- How to read file Asynchronously
+args-> filepath, textType, Callback function with error or data 
+
+fs.readFile(`./txt/append.txt`, "utf-8", (err, data3) => {
+      console.log(data3);
+});
+
+
+- How to write file Asynchronously
+args-> filepath, data to add in file, textType, Callback function with error if any
+
+fs.writeFile("./txt/final.txt",`${data2}\n\n${data3}`,"utf-8", (err) => {
+    console.log("File has been updated.");
+});
+
+
+==============================================================================
+SERVERS
+
+need to require http module
+http.createServer - > takes two args req and res
+req -> client send req with info. (e.g. url) info will be in req
+res -> server response will be in res 
+
+const server = http.createServer((req, res) => {
+  console.log(req.url);
+  res.end("Hello from the server...💕");
+});
+
+server.listen(8000, "127.0.0.1", () => {
+  console.log("Server is running on port 8000");
+});
+
+http.createServer -> creates the server
+
+server.listen(8000, "127.0.0.1", () => {}) -> set port on which server will listen to
+
+res.end -> basic way to send final response 
+
+ROUTING
+res.writeHead -> function to add info in header like status code or header object
+1st arg is status code and 2nd one will be header object
+
+e.g.-> res.writeHead(404, { "Content-type": "text/html", my_own: "Helloooo" });
+you can custom header key value pairs as well as shown in example
+
+- the paths in url and no relation with files or folders in node application 
+
+APIs - In this context, a web API is a service that provides data when requested. In our project, it will send product data (stored in dev-data/data.json) to the client.
+
+Steps to Create the API->
+if (pathname === '/api') {
+    res.end('API');
+}
+
+Read JSON Data:
+Use Node.js fs module to read the JSON file, parse it, and send the data back to the client.
+
+const fs = require('fs');
+fs.readFile(`${__dirname}/dev-data/data.json`, 'utf-8', (err, data) => {
+    const productData = JSON.parse(data);
+    res.end(productData);
+});
+
+
+Key Concepts:
+JSON File:
+The JSON file is an array of objects with product details like id, productName, and price.
+
+Current Directory (__dirname):
+Use __dirname to locate files relative to the script's location, ensuring portability.
+
+Template Strings:
+Combine __dirname with file paths using template strings.
+
+- __dirname ->  a global variable that provides the absolute path of the directory containing the currently executing JavaScript file
+`${__dirname}/dev-data/data.json`
+
+-> Node Farm - Dynamic Website Templates
+- Goal: Build templates for the overview and product detail pages. Dynamic data will come from a JSON file.
+- First Step: Start with the product detail page (product.html).
+
+-> Templates Folder
+- All HTML templates will go here: overview.html, product.html.
+
+-> Dynamic Content
+- JSON file contains product data.
+- Any change in the JSON file (e.g., adding/removing products) will automatically update the website.
+- Replace static content in the HTML file with placeholders.
+
+-> Fields in JSON File
+- Fields: name, image, from, nutrients, quantity, price, organic, description.
+- Example:
+        Product name = {{%PRODUCT_NAME%}}.
+        Product image = {{%PRODUCT_IMAGE%}}.
+
+-> Why Placeholders?
+- Static text → Placeholder ({{%PLACEHOLDER_NAME%}}).
+- Makes the page dynamic.
+- Placeholders are unique → No accidental replacement.
+
+-> Example
+    Original Static: <h1>Apple</h1>
+    With Placeholder: <h1>{{%PRODUCT_NAME%}}</h1>
+
+======================================================
+
+-> Steps to Dynamically Replace Placeholders
+    ->Load Templates at App Start:
+
+        - Templates like template-overview, template-card, and template-product are read into memory once when the app starts, not during each request.
+        - This avoids performance issues if there are multiple simultaneous requests.
+
+        const tempOverview = fs.readFileSync(`${__dirname}/templates/template-overview.html`, 'utf-8');
+        const tempCard = fs.readFileSync(`${__dirname}/templates/template-card.html`, 'utf-8');
+        const tempProduct = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8');
+
+    -> Send the Template for the Overview Page:
+
+        - For requests to /overview, send the tempOverview template.
+        - Set the Content-Type to text/html.
+
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(tempOverview);
+
+    -> Replace Placeholders with Data:
+
+        - Use a helper function, replaceTemplate, to replace placeholders with actual product data.
+
+        const replaceTemplate = (template, product) => {
+            let output = template.replace(/{%PRODUCTNAME%}/g, product.productName);
+            output = output.replace(/{%IMAGE%}/g, product.image);
+            output = output.replace(/{%PRICE%}/g, product.price);
+            output = output.replace(/{%FROM%}/g, product.from);
+            output = output.replace(/{%NUTRIENTS%}/g, product.nutrients);
+            output = output.replace(/{%DESCRIPTION%}/g, product.description);
+            output = output.replace(/{%QUANTITY%}/g, product.quantity);
+
+            if (!product.organic) {
+                output = output.replace(/{%NOT_ORGANIC%}/g, 'not-organic');
+            }
+            return output;
+        };
+
+    -> Generate HTML for All Cards:
+
+        - Use the map method to loop through the dataset (dataObject), apply replaceTemplate to each product, and create an array of HTML strings.
+        - Join the array into a single string.
+
+        const cardsHtml = dataObject.map((el) => replaceTemplate(tempCard, el)).join('');
+
+
+    -> Insert Cards into the Overview Template:
+
+        - Replace the placeholder in the tempOverview with the generated cardsHtml.
+        const output = tempOverview.replace('{%PRODUCT_CARDS%}', cardsHtml);
+        res.end(output);
+
+    -> Handle Edge Cases:
+
+        - If a placeholder appears multiple times, use a global regular expression (/g) to replace all occurrences.
+        - Ensure proper error handling for typos or unexpected data.
+
+-> Key Concepts
+    -> Template Caching: Read templates once at the start for efficiency.
+
+    -> Map Function: Use Array.map to transform data into HTML strings.
+
+    -> String Replacement: Replace placeholders using String.replace() with a global regex for multiple replacements.
+
+    -> Join Method: Combine an array of strings into a single string using .join('').
+
+
+-> Testing and Debugging
+    1. Restart the server after making changes.
+    2. Use console.log to verify intermediate outputs, such as:
+        - The cardsHtml array.
+        - The final output string.
+    3. Handle errors gracefully, and double-check placeholder names.
+
+
+========================================
+
+Introduction to NPM and the package.json File
+
+-> Key Concepts About npm:
+- What is npm?
+    - npm is both a command-line interface and a package repository.
+    - It is automatically included when you install Node.js.
+    - It allows you to install, manage, and share open-source packages/modules.
+
+-> npm Repository:
+    - npm hosts packages at npmjs.com.
+    - It is the largest software registry globally, hosting JavaScript libraries and frameworks.
+    - Popular libraries like Express (Node framework) and React are available here.
+
+-> How npm is Used:
+    - npm isn’t limited to backend Node.js development. It's extensively used in front-end projects and across the JavaScript ecosystem.
+
+-> Commands and Steps Explained:
+1. Initializing a New Project:
+    - Use npm init to set up a new project.
+    - This creates a package.json file, which acts as the configuration file for the project.
+
+    - Example of npm init process:
+        - Package name: The name of your project (e.g., node-farm).
+        - Version: Default is 1.0.0 unless specified otherwise.
+        - Description: A brief description of the project.
+        - Entry point: The main file of the project (e.g., index.js).
+        - Test command, keywords, author, license: Additional metadata about the project.
+
+2. The package.json File:
+
+    - Stores metadata about the project, like:
+        - Name and version of the project.
+        - Dependencies (third-party libraries/packages).
+    - It keeps track of all the installed packages.
+
+-> What’s Next:
+    - Installing Packages: In the next steps (as mentioned), you’ll learn to install real packages using npm commands like npm install.
+    - These installed packages will be recorded in the package.json file.
+
+- If you’re already familiar with front-end libraries (like React), this will feel similar because npm is universally used across JavaScript projects.
+
+- The metadata in package.json helps manage your project dependencies effectively.
+
+=====================================================
+
+
+-> Types of Packages:
+
+1. Regular (Simple) Dependencies:
+    - These are packages that your project depends on to function correctly.
+    - Example: Express for building web servers in Node.js.
+
+    - To install: npm install <package-name>
+    - When installing a package (e.g., Slugify), it will be added under the dependencies field in package.json
+
+2. Development Dependencies (Dev Dependencies):
+
+    - These are tools used during development but not needed in production.
+    - Example: Nodemon (automatically restarts the server on file changes).
+    
+    - To install: npm install <package-name> --save-dev
+    - These packages are added under devDependencies in package.json.
+
+
+3. Example Process:
+
+    - Installing Slugify (a simple dependency): "npm install slugify"
+        This adds it to dependencies in package.json.
+
+    - Installing Nodemon (a dev dependency): "npm install nodemon --save-dev"
+        This adds it to devDependencies in package.json.
+
+-> npm Folder and Node Modules:
+
+    - After installing packages, a node_modules folder is created, containing all dependencies.
+    - Even if you only installed a few packages, there could be many others in node_modules, as some packages depend on others.
+
+
+-> Two Types of Installs:
+
+1. Local Install (default):
+
+    - Packages are installed locally to the project and are only available in that project.
+    - For example, when you run npm install slugify, the package is available in your current project.
+    - You can see the installed packages in node_modules and package.json.
+
+2. Global Install (Not covered yet, but useful for CLI tools):
+
+    - Install packages globally so they can be used across multiple projects.
+    - Install globally with npm install -g <package-name>.
+
+=====================================================
+
+-> Requiring Modules:
+    1. You can require Node.js core modules, your own modules, and third-party modules.
+    2. It's a good practice to require:
+        - Core modules first
+        - Third-party modules second
+        - Your local modules last
+
+-> Example Module: Slugify
+- We are going to require a third-party module called slugify, which was installed previously using npm.
+
+-> How to Require a Third-Party Module:
+    1. Use the require() function.
+    2. Pass the name of the module as a string to require().
+    3. Node.js will look inside the node_modules folder for the module.
+
+-> Storing the Required Module:
+    - The require() function returns a variable, which should be stored in a variable.
+    - For this example, the variable name is slugify.
+      const slugify = require('slugify');
+
+
+-> What is a Slug?
+    - A slug is the last part of a URL that contains a unique string identifying a resource on a website.
+    - Example: www.example.com/products/fresh-avocados → "fresh-avocados" is the slug.
+    - Using slugs is better than using numerical IDs (e.g., id=1) because they are more meaningful and readable.
+
+-> Using the Slugify Module:
+- Slugify converts a string into a slug format.
+- It makes sure that spaces are replaced with dashes and characters are converted to lowercase.
+- Example: Input: "Fresh Avocados" Output: "fresh-avocados"
+
+-> Additional Features in Slugify:
+    - You can customize the separator (default is a dash -).
+    - You can also convert the string to lowercase.
+
+
+-> Documentation:   
+    - To understand how the module works, search for the slugify package on npm.
+
+-> Testing the Slugify Function:
+    - After requiring the module, use it in your code like this: 
+    console.log(slugify('Fresh Avocados', { lower: true }));
+    This will log: "fresh-avocados"
+
+-> Options in Slugify:
+    - lower: Set to true to convert the string to lowercase.
+    - You can also customize the separator, such as using an underscore (_) instead of a dash (-).
+
+=====================================================
+
+Notes: Working with npm Packages (Versioning, Updating, Deleting)
+
+-> Semantic Versioning: npm packages follow semantic versioning, expressed as three numbers:
+
+    1. Major Version: Significant changes, potentially breaking backward compatibility (e.g., "2".0.0).
+    2. Minor Version: New features that are backward compatible (e.g., 1."19".0).
+    3. Patch Version: Bug fixes, no new features (e.g., 1.18."1").
+
+-> Patch Version (Third Number):
+    - Fixes bugs.
+    - For example, if a bug is found in version 1.18, developers release version 1.18.1, and further fixes continue with 1.18.2, 1.18.3, etc.
+
+-> Minor Version (Second Number):
+
+    - Adds new features but remains backward compatible.
+    - For example, in version 1.19, new features are added, but existing code will still work.
+
+-> Major Version (First Number):
+
+    - Released for significant changes or breaking changes.
+    - Example: If a major update like Slugify 2.0 comes along, it may break compatibility with the previous version due to changes in function names or parameters.
+
+-> Version Numbers:
+    - Be aware of changes in version numbers because they can affect the existing code.
+
+
+Updating Packages:
+
+-> package.json Version Symbol:
+
+    - npm uses a symbol before the version number to specify which updates are accepted for each package:
+        ~: Accepts only patch updates.
+        ^: Accepts minor and patch updates (default behavior).
+
+
+-> How to Check for Outdated Packages:
+    - Run npm outdated to get a list of outdated packages and their versions.
+    - It will show:
+        - Current version: The installed version.
+        - Wanted version: The latest version according to the allowed updates.
+        - Latest version: The most recent version available.
+
+-> Installing Specific Package Version:
+ - You can install a specific version of a package by using npm install <package-name>@<version>.
+ - Example: npm install slugify@1.0.0 will install Slugify at version 1.0.0.
+
+-> Updating Packages:
+    - To update a package, run npm update.
+    - To install a specific version, you can use the exact version number.
+
+
+Key Commands:
+    - npm outdated: Displays outdated packages.
+    - npm install <package-name>@<version>: Install specific version of a package.
+    - npm update: Updates packages according to the versioning rules in package.json.
+
+-> Important Concepts:
+
+    - Backward Compatibility: Minor version updates are safe, meaning the code should still work even with new features.
+    - Breaking Changes: Major version updates often come with breaking changes that may require adjustments to your code.
+    - Package Updates: Always check for outdated packages and decide whether to update them based on your project's needs (patch/minor/major updates).
+
+
+=====================================================
+
+VS Code Setup & Prettier Extension
+
+1. VS Code Extensions
+    - Extensions in VS Code help improve productivity and code quality.
+    - Not all extensions are relevant for the current course, but relevant ones will be mentioned as we go along.
+
+2. Useful Extensions
+    - ESLint: Detects bugs in JavaScript code. (We'll set this up later for Node).
+    - Image Preview: Allows you to preview images directly in VS Code.
+    - Prettier: Formats code automatically (JavaScript, CSS, HTML). Helps maintain consistent code formatting across the team.
+        - Prettier can format code on save, reducing the need to worry about manual formatting.
+
+3. Other Useful Extensions
+    - Pug: A template language that will be used later in the course for templates.
+    - TabNine: Auto-completion tool for faster coding.
+    - TODO Highlight: Highlights specific comments in the code like TODO, BUG, FIXME, with color coding.
+        - Very useful for tracking tasks or issues.
+        - These keywords are also visible in the sidebar of VS Code.
+
+4. VS Code Theme
+    - Theme: Oceanic Next (frequently asked by viewers).
+    - The theme is essential for clarity and personal preference.
+
+5. Prettier Setup
+    - Prettier: Automatically formats code to make it cleaner and consistent.
+        - It is opinionated and follows a strict set of rules.
+        - You don’t need to worry about style decisions.
+        - Prettier formats JavaScript, CSS, HTML, etc.
+
+6. Installing Prettier
+    - Install the Prettier extension in VS Code.
+    - Once installed, enable Format on Save:
+        - Go to settings and search for Format on Save.
+        - This ensures code is auto-formatted every time you save a file.
+
+7. Configuring Prettier
+    - Prettier is opinionated, so customization is limited.
+    - However, you can configure some settings.
+        - While settings can be done directly in VS Code, it's better to define a configuration file (.prettierrc) for better control.
+
+8. Summary
+    - Install Prettier and enable Format on Save.
+    - Define a configuration file for Prettier for more control over code formatting.

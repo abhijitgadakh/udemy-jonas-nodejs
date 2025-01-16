@@ -1,0 +1,17 @@
+- Node.Js is a javscript runtime built on google's open-source v8 javscript engine. 
+
+- Pros
+1. Single-threaded, based on event driven, non-blocking i/o model - which makes light-weight, super effiecient and fast
+2. perfect for fast and scalable data-intensive apps
+3. same language (js) for both frontend and backend
+4. huge free open-source library (NPM)
+
+usecase
+1. api with database behind
+2. data streaming like youtube
+3. real-time chat application
+4. server side web application
+
+- cant use when severside proccessing is heavy
+
+
