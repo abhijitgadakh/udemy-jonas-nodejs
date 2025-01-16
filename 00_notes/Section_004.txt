@@ -1,0 +1,612 @@
+============ Node, V8, Libuv and C++ ==============
+
+-> Node Architecture Overview
+    - Node relies on a few key libraries to function properly.
+
+-> Key Dependencies:
+
+    - V8 Engine:
+        - Node is based on Google's V8 JavaScript engine.
+        - V8 converts JavaScript code into machine code that the computer understands.
+        - Without V8, Node wouldn't understand JavaScript.
+
+    - libuv:
+        - Open source library focused on asynchronous I/O (input/output).
+        - Provides access to the underlying OS, file system, networking, etc.
+        - Implements two main features:
+            - Event Loop: Handles simple tasks like callbacks and network I/O.
+            - Thread Pool: Handles heavy tasks like file access or compression.
+            - Written in C++, not JavaScript.
+        
+-> Node's Composition:
+    - Node itself is a combination of C++ and JavaScript, not just JavaScript.
+    - This combination allows Node to tie these libraries together and present a JavaScript API to developers, making it easier to work with.
+    
+->Libraries Beyond V8 and libuv:
+    - http-parser: For parsing HTTP requests.
+    - c-ares: For DNS requests.
+    - OpenSSL: For cryptography.
+    - zlib: For compression.
+
+-> Benefit for Developers:
+    - Node provides a high-level abstraction, so developers write pure JavaScript, but still have access to the underlying functionalities implemented in C++ and other languages.
+
+=====================================================================
+========= Processes, Threads and the Thread Pool ===========
+
+ -> Node Process on a Computer:
+    - Node runs as a process on the computer (a program in execution).
+    - Node.js is a C++ program, so it starts a process when running.
+    - Access to a process variable in Node.js, useful later in the course.
+
+ -> Single Thread in Node:
+    - Node.js runs in a single thread.
+    - A thread is a sequence of instructions executed in a processor.
+    - Important concept: Node runs on a single thread, and blocking this thread can slow down applications.
+
+ -> Why Single Thread is Important:
+    - Node running on a single thread means it can easily be blocked.
+    - Regardless of the number of users (e.g., 10 users or 10 million), Node runs on that one thread.
+    - Caution: Don't block that single thread; we'll avoid this in the course project.
+
+ -> What Happens in a Single Thread in Node:
+    - When Node app starts, top-level code is executed first (code outside callbacks).
+    - Modules required by the app are loaded.
+    - Callbacks are registered (e.g., for HTTP server).
+    - The event loop starts running (we'll discuss this more in the next video).
+
+ -> Event Loop:
+    - The event loop is the heart of Node’s architecture.
+    - What the event loop does: Handles most of the app's work.
+
+ -> Heavy Tasks & Thread Pool:
+    - Some tasks are too heavy for the event loop to handle.
+    - These tasks would block the single thread.
+    - Example: Operations like file handling, cryptography, compression, DNS lookups.
+
+ -> Thread Pool:
+    - The thread pool helps by offloading heavy tasks from the event loop.
+    - It’s managed by the libuv library (which Node uses).
+    - The thread pool has 4 threads by default (can be configured to 128).
+
+ -> How Thread Pool Works:
+    - The event loop automatically offloads heavy tasks to the thread pool.
+    - Developers don’t need to decide which tasks go to the thread pool.
+    - The thread pool ensures the event loop isn’t blocked.
+
+ -> Common Expensive Tasks Offloaded to Thread Pool:
+    - File operations
+    - Cryptography (e.g., password hashing)
+    - Compression tasks
+    - DNS lookups (matching web domains to IP addresses)
+
+ -> Key Takeaway:
+    - Node automatically offloads expensive tasks to the thread pool, ensuring the event loop continues running smoothly without blocking.
+
+===============================================================
+======================== The Node.js Event Loop ================
+
+-> What the Event Loop Does:
+    - The event loop executes application code inside callback functions, which are triggered by events such as receiving HTTP requests, timers expiring, or completing file reads.
+    - The event loop orchestrates events and callbacks, ensuring that the application can handle multiple tasks without blocking the main thread.
+
+-> Event Loop Phases:
+    - The event loop runs in several phases, each with its own callback queue. These include:
+        - Timers: Handles expired timers (e.g., setTimeout).
+        - I/O Polling: Processes I/O callbacks (e.g., networking, file system operations).
+        - setImmediate Callbacks: Processes callbacks queued with setImmediate after I/O.
+        - Close Callbacks: Handles cleanup callbacks for things like server shutdown.
+
+-> Microtask Queues:
+    - There are additional microtask queues such as the nextTick() queue and the microtasks queue for resolved promises. Callbacks in these queues are processed immediately after each event loop phase, before moving to the next phase.
+
+-> Event Loop Cycle:
+    - A cycle, or "tick," occurs for each phase. After processing the events in the phase, the event loop decides whether to continue to the next tick or exit. It checks if there are pending I/O or timer tasks, and if so, the loop continues; otherwise, the process exits.
+
+-> Importance of the Event Loop:
+    - The event loop allows Node.js to handle high concurrency using a single thread, making it lightweight and scalable. This design is different from other platforms like PHP, which use multiple threads for handling requests. However, Node.js needs careful management to avoid blocking the event loop, which would impact performance.
+
+This understanding of the event loop is key to writing efficient, non-blocking code in Node.js and understanding how the platform handles high volumes of asynchronous tasks.
+
+
+===============================================================
+======================== The Event Loop in Practice ================
+
+-> Event Loop Concepts
+
+1. Top-Level Code Execution:
+    - First thing that happens when a script is loaded.
+    - Example: console.log("Hello from the top-level code");
+
+2. Timers (e.g., setTimeout):
+    - Adds callbacks to the event loop’s callback queue.
+    - setTimeout can schedule a callback to execute after a specified delay (in milliseconds).
+    - setTimeout with 0ms still doesn’t execute immediately, due to the event loop's phases.
+
+3. setImmediate:
+    - Executes callbacks after the poll phase (i.e., once the event loop has handled I/O).
+    - It’s designed to run immediately after the current phase, but not before the timers.
+
+4. I/O Operations (e.g., fs.readFile):
+    - I/O operations run in the poll phase of the event loop.
+    - I/O finished logs typically appear after setImmediate but before timers that expire.
+
+
+-> Behavior Analysis in Event Loop
+
+- First Output: console.log("Hello from the top-level code");
+    - This is executed immediately.
+
+- Next Steps: setTimeout(0), setImmediate, and I/O callbacks.
+    - Results may appear in unpredictable order due to event loop processing.
+
+- Timers vs setImmediate:
+    - setTimeout and setImmediate may seem similar, but they’re executed at different stages in the event loop.
+    - Timers (e.g., setTimeout) are executed in the timers phase.
+    - setImmediate callbacks are executed in the check phase, right after the poll phase finishes.
+
+- Why the Confusion?
+    - setTimeout(0) does not execute immediately due to event loop waiting for timers in the polling phase.
+    - setImmediate runs after the poll phase, even before expired timers.
+    
+-> process.nextTick
+
+1. microtasks queue:
+    - process.nextTick callbacks run before the event loop phases.
+    - They are executed after the current operation finishes, before any other event loop phase.
+    - Next Tick occurs before even timers and setImmediate, which is often surprising.
+
+2. Behavior:
+    - Any callback inside process.nextTick gets executed first.
+    - This is useful for short-circuiting the event loop when we need immediate execution.
+
+3. Confusion with Naming:
+    - process.nextTick is misleading as it runs before the next tick, not after it.
+    - Recommendation: Use setImmediate for clarity, as it schedules the callback after the current operation.
+
+
+-> Thread Pool (Crypto Module Example)
+
+1. Thread Pool:
+    - Node.js uses a thread pool for some tasks (like file I/O, cryptography).
+    - Default thread pool size is 4.
+    - Tasks like encryption (using crypto.pbkdf2()) are offloaded to this pool to avoid blocking the main event loop.
+
+2. Timing Observations:
+    - Encrypting passwords using crypto.pbkdf2() in parallel:
+        - Takes similar time as the number of threads in the thread pool (default = 4).
+        - Changing the thread pool size with process.env.UV_THREADPOOL_SIZE affects execution times.
+
+3. Example with 4 Threads:
+    - Encrypting 4 passwords in parallel takes about the same time as a single encryption with 4 threads, as tasks are handled in parallel.
+
+4. Reducing Thread Pool Size:
+    - If thread pool size is reduced (e.g., process.env.UV_THREADPOOL_SIZE = 1), tasks execute sequentially, which increases total execution time.
+
+5. Synchronous Version:
+    - The synchronous version of crypto.pbkdf2Sync() blocks the event loop.
+    - This causes all other operations (like timers and nextTick callbacks) to wait until the synchronous tasks finish.
+    - Example: Running 4 synchronous encryptions blocks the entire event loop.
+
+-> Key Takeaways
+
+1. Event Loop Phases:
+    - Top-Level Code -> Timers -> I/O Polling -> setImmediate -> process.nextTick.
+
+2. Callback Order:
+    - process.nextTick runs first.
+    - setImmediate runs after the poll phase.
+    - setTimeout (even with 0ms) runs after setImmediate due to polling.
+
+3. Thread Pool and Asynchronous Operations:
+    - Node.js utilizes a thread pool for some I/O operations.
+    - You can adjust the thread pool size to control concurrency.
+
+4. Blocking the Event Loop:
+    - Using synchronous operations (e.g., pbkdf2Sync()) can block the event loop, causing other asynchronous tasks to wait.
+
+
+-> Additional Notes
+    - Asynchronous operations in Node.js are designed to avoid blocking the event loop. Use them to prevent delays in your application.
+    - Use case: For computationally intensive tasks (e.g., encryption), it's important to leverage the thread pool and asynchronous behavior to avoid performance issues.
+
+===============================================================
+======================== Event-Driven Architecture ================
+
+1. Introduction to Event-Driven Architecture:
+    - Node.js core modules (e.g., HTTP, File System, Timers) use event-driven architecture.
+    - This architecture can be utilized in custom code to handle events effectively.
+
+2. Core Concepts:
+    - Event Emitters: Objects that emit named events when something significant happens (e.g., a server request, timer expiration, file read completion).
+    - Event Listeners: Functions set up by developers to respond to specific events emitted by emitters.
+        - Each listener executes a callback function when its associated event is emitted.
+
+3.How it Works:
+    - Emitters and listeners work together:
+        - Emitters announce events.
+        - Listeners react to these events by executing callbacks.
+    - Example:
+        - A server emits a "request" event each time it receives a request.
+        - Listeners set up for this event automatically execute the attached callback to handle the request.
+
+4. Practical Example:
+    - When creating a server:
+        - Use createServer() to initialize the server.
+        - Use server.on("request", callback) to set up a listener for the "request" event.
+        - When a request hits the server, the "request" event is emitted, triggering the callback.
+
+5. Behind the Scenes:
+    - Node’s server is an instance of the EventEmitter class.
+    - The server inherits all event-emitting and listening capabilities from this class.
+
+6. Observer Pattern in JavaScript:
+
+    - Event-driven architecture follows the Observer Pattern:
+        - Observers (event listeners) monitor subjects (event emitters).
+        - Listeners react only when the specific event they’re watching for occurs.
+    - Opposite of this pattern: Functions directly calling other functions (more tightly coupled).
+
+7. Benefits of Event-Driven Architecture:
+    - Decoupling: Modules (e.g., File System, HTTP) operate independently.
+        - No direct function calls between modules; events serve as the communication mechanism.
+    - Flexibility: Multiple listeners can respond to the same event without extra complexity.
+        - Simply add more listeners for the same event if needed.
+
+
+8. Advantages Over Traditional Function Calls:
+    - Decoupled design prevents tightly-knit dependencies across modules.
+    - Self-contained modules emit events that others can react to without direct linkage.
+
+9. Real-World Applications:
+    - Frequently used in handling server requests, file operations, timers, etc.
+    - Event-driven logic allows clean and reusable code.
+
+10. Key Takeaways:
+    - Event-driven architecture is central to Node.js.
+    - Helps in creating efficient, decoupled systems.
+    - Will see its usage in upcoming practical examples throughout the course.
+
+===============================================================
+======================== Events in Practice ================
+
+Basics:
+1. Event Emitter Overview:
+    - Built-in Node.js module: events.
+    - Central concept: EventEmitter class.
+
+2. Importing EventEmitter:
+    - const EventEmitter = require('events');
+    - EventEmitter is the standard class for creating event-driven code.
+
+3. Creating an Emitter:
+    - const myEmitter = new EventEmitter();
+    - This creates a new instance of the EventEmitter.
+
+-> Emitting and Listening to Events:
+1. Emitting Events:
+    - Use .emit() method to create an event.
+        myEmitter.emit('newSale');
+
+2. Listening to Events:
+    - Use .on() method to set up listeners for events.
+        myEmitter.on('newSale', () => {
+            console.log('There was a new sale!');
+        });
+
+3. Multiple Listeners:
+    - You can add multiple listeners for the same event.
+        myEmitter.on('newSale', () => {
+            console.log('Customer name: Jonas');
+        });
+
+Example Output:
+    1. When the event 'newSale' is emitted:
+        There was a new sale!
+        Customer name: Jonas
+
+Observer Pattern:
+    - Concept:
+        - Emitter = Observable object that triggers events.
+        - Listeners = Observers that react to the events.
+
+-> Passing Arguments to Listeners:
+1. Emit Arguments:
+    - Pass additional arguments in .emit().
+        myEmitter.emit('newSale', 9);
+
+2. Receive Arguments in Listeners:
+    - Listeners can capture arguments using the callback parameter.
+        myEmitter.on('newSale', (stock) => {
+            console.log(`There are now ${stock} items left in stock.`);
+        });
+
+3. Output:
+    - There are now 9 items left in stock.
+
+-> Listener Execution Order:
+    - Synchronous Execution:
+        - Listeners for the same event execute in the order they are declared.
+
+Use Cases:
+    - Useful for event-driven systems, like:
+        - Online stores: newSale, newOrder, etc.
+        - Real-time apps: userLogin, messageReceived.
+
+-> Key Takeaways:
+    - EventEmitters are a core part of Node.js for building asynchronous, event-driven applications.
+    - Allows separation of concerns by decoupling emitters and listeners.
+
+
+===============================================================
+======================== Introduction to Streams ================
+
+
+Notes on Node.js Streams
+
+Introduction to Streams
+    - Definition: Streams process (read/write) data piece by piece without completing the whole operation at once.
+    - Benefits:
+        1. Memory Efficiency: No need to load all data into memory.
+        2. Time Efficiency: Start processing as data arrives.
+    - Applications:
+        - File processing: Read/process large files incrementally.
+        - Streaming services (e.g., YouTube, Netflix): Play video before full download.
+    - Core Principle: Universal in computer science, not just Node.js.
+
+Types of Streams in Node.js
+
+1. Readable Streams:
+    - Purpose: Read/consume data.
+    - Examples:
+        Incoming HTTP request data.
+        Reading large files with the fs module.
+    Events:
+        data: Emitted for each piece of data to consume.
+        end: Emitted when all data is consumed.
+    Key Functions:
+        pipe: Connects streams, passing data efficiently.
+
+2. Writable Streams:
+    - Purpose: Write data into the stream.
+    - Examples:
+        - Sending HTTP response data.
+        - Streaming video to clients.
+    - Events:
+        - drain: Emitted when the stream is ready for more data.
+        - finish: Emitted when all data has been written.
+    - Key Functions:
+        - write: Write data to the stream.
+        - end: Signal the end of writing.
+
+3. Duplex Streams:
+    - Definition: Both readable and writable.
+    - Example: WebSockets (bi-directional communication between client and server).
+
+4. Transform Streams:
+    - Definition: Duplex streams that modify data as it passes through.
+    - Example: Compressing/decompressing data.
+
+-> Streams and Event Emitters
+    - Streams are instances of the EventEmitter class.
+    - Emit and listen to named events for efficient handling.
+
+-> Use Cases of Streams
+    - Processing Large Files: Handle data in chunks without overloading memory.
+    - Real-Time Communication: Efficiently manage bi-directional data streams (e.g., live chats, streaming APIs).
+    - Transforming Data: Modify data dynamically during read/write operations (e.g., encoding files).
+
+-> Key Takeaways
+    - Streams optimize performance for handling large or continuous data.
+    - Focus on Readable and Writable streams for most applications.
+    - Events like data, end, drain, and finish allow dynamic handling of stream state.
+    - Functions like pipe simplify connecting streams.
+
+
+===============================================================
+======================== Streams in Practice ================
+
+
+-> Introduction to Streams
+    - Streams are used to handle large amounts of data efficiently by processing it in chunks rather than loading it entirely into memory.
+    - Example: Reading a large text file and sending it to the client.
+
+
+Step 1: Setting Up the Basics
+    - Modules Required:
+        -fs (File System)
+        -http (to create a server)
+
+    - Creating a Server:
+        -Use http.createServer to set up a server.
+        -Listen for incoming requests using .on('request', callback).
+
+
+Solution 1: Basic File Reading (Not Efficient)
+    - Process:
+        1. Use fs.readFile to read the entire file into memory.
+        2. Handle errors (e.g., file not found).
+        3. Send the data to the client using response.end(data).
+
+        Code Example:
+        fs.readFile('test-file.txt', (err, data) => {
+            if (err) {
+                console.error(err);
+            } else {
+                response.end(data);
+            }
+        });
+
+        Problem:
+            - Entire file is loaded into memory at once.
+            - Not scalable for large files or many simultaneous requests.
+
+
+
+Solution 2: Using Streams (Efficient)
+
+    - Concept:
+        - Use a readable stream to process the file in chunks.
+        - Pipe the chunks directly to the response, which is a writable stream.
+
+    - Process:
+        - Create a readable stream using fs.createReadStream.
+            - Example: const readable = fs.createReadStream('test-file.txt');
+        - Pipe the stream to the response:
+            - readable.pipe(response);
+
+    - Advantages:
+        - No need to load the entire file into memory.
+        - Handles large files efficiently.
+
+
+Code Walkthrough for Solution 2
+1. Create a readable stream:
+    const readable = fs.createReadStream('test-file.txt');
+
+2. Pipe the stream to the client:
+    readable.pipe(response);
+
+
+-> Issues to Consider with Streams
+    - Error Handling:
+        - Streams can emit errors (e.g., file not found).
+        - Use .on('error', callback) to handle them
+
+            readable.on('error', (err) => {
+                console.error('Error occurred:', err);
+                response.statusCode = 500;
+                response.end('File not found!');
+            });
+
+
+-> Key Takeaways
+    - Streams are the best way to handle large files or multiple requests efficiently.
+    - fs.createReadStream + .pipe(response) is simple and scalable.
+    - Always handle errors to ensure your application doesn't crash.
+
+
+===============================================================
+======================== How Requiring Modules Really Works ================
+     
+
+1. Node.js Module System Overview
+    - Each JavaScript file in Node.js is treated as a separate module.
+    - Node.js primarily uses CommonJS modules, which work well for server-side applications.
+    - There are also ES Modules (native ECMAScript modules) for frontend JavaScript using import/export.
+        - Not as commonly used in Node.js but can be supported via .mjs extensions.
+
+2. CommonJS Modules in Node.js
+    - Use the require function to load modules.
+    - Export data using module.exports or exports.
+
+3. How Node.js Resolves Modules
+    Three types of modules:
+        1. Core modules (e.g., http, fs).
+        2. Developer modules (custom-written files or folders).
+        3. Third-party modules (installed via npm, e.g., express).
+
+4. Resolving Module Paths
+    - If the module name is a core module, Node.js loads it automatically.
+    - If the path starts with ./ or ../:
+        - It looks for the file.
+        - If no file is found, it checks for an index.js in the folder.
+    - For npm modules:
+        - Node looks in the node_modules directory.
+        - If the module isn't found, an error is thrown.
+
+5. Steps When require is Called
+    - Path to the module is resolved.
+    - The module's code is wrapped into a special function.
+    - Module code is executed.
+    - The exports object is returned.
+    - he module is cached to optimize performance.
+
+6. Special Wrapping Function
+    - Node.js wraps the module code in a function
+
+        (function(exports, require, module, __filename, __dirname) {
+            // Module code here
+        });
+
+    - This provides access to:
+        - require: Function to import modules.
+        - module.exports: Object to export data.
+        - exports: Alias for module.exports.
+        - __filename: Full path of the current file.
+        - __dirname: Directory of the current file.
+
+7. Caching
+    - Once a module is loaded, it is cached.
+    - Subsequent require calls fetch the cached version, ensuring efficiency.
+
+
+===============================================================
+======================== Requiring Modules in Practice ================
+
+1. Wrapper Function:
+    - Node.js wraps module code in a function with five parameters:
+        - exports
+        - require
+        - module
+        - __filename
+        - __dirname
+
+2. Arguments Object:
+    - By logging the arguments object, you can observe the wrapper function's parameters, proving that the code runs inside a function.
+
+3. Inspecting the Wrapper Function:
+    - Using the built-in module module, you can access and view the wrapper function template.
+
+4. Exporting and Importing Modules:
+    - Export a single value (e.g., a class) using module.exports.
+    - Import it in another file using require with a relative path (./module-name).
+
+5. Practical Example:
+    - Created a Calculator class with methods for addition, multiplication, and division.
+    - Exported the class using module.exports.
+    - Imported it into another file, demonstrating flexibility in naming the imported value.
+
+
+Code Example:
+Module (test-module-1.js)
+
+    class Calculator {
+    add(a, b) {
+        return a + b;
+    }
+    multiply(a, b) {
+        return a * b;
+    }
+    divide(a, b) {
+        return a / b;
+    }
+    }
+
+    module.exports = Calculator;
+
+
+Main File:
+
+    const MyCalculator = require('./test-module-1');
+    const calc = new MyCalculator();
+
+    console.log(calc.add(2, 3));        // Output: 5
+    console.log(calc.multiply(2, 3));  // Output: 6
+    console.log(calc.divide(6, 2));    // Output: 3
+
+
+- Takeaways:
+    - Node.js encapsulates modules in a private scope using the wrapper function.
+    - Use module.exports and require to modularize and reuse code effectively.
+    - The wrapper function provides helpful parameters like __filename and __dirname for additional context.
+
+
+
+
+
+
+
+
+
+
