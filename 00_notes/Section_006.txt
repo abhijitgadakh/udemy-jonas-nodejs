@@ -1,1 +1,1281 @@
 06 Express_ Let's Start Building the Natours API!
+
+=============================================================
+============== What is Express
+
+- What is Express?
+    - Express is a minimal Node.js framework, built on top of Node.js.
+    - It’s a higher level of abstraction, but still uses 100% Node.js code behind the scenes.
+    - Most popular Node.js framework, with others available but Express is the standard.
+
+2. Key Features of Express:
+    - Robust and useful features:
+        - Complex routing
+        - Easier handling of requests and responses
+        - Middleware management
+        - Server-side rendering
+        - Much more out of the box.
+    - Express allows faster development of Node.js applications by providing pre-built solutions for common tasks.
+
+3. Benefits of Using Express:
+    - No need to reinvent the wheel: Express handles many complex tasks that would otherwise require repetitive code (like complex routing, templating, etc.).
+    - Speed up the development process by using pre-configured tools.
+
+
+4. Simplified Routing:
+    - The routing process in Express is simpler than doing it from scratch.
+    - Example: Simple routing in this course was already doable, but Express makes it 10 times easier.
+
+5. MVC Architecture:
+    - Express makes it easier to organize applications using the MVC (Model-View-Controller) architecture.
+    - MVC is a popular software design pattern that will be covered during this course.
+
+6. Conclusion:
+    - Express makes working with Node.js much easier.
+    - Overall, it provides a more pleasant development experience and significantly speeds up the process.
+
+
+=============================================================
+============== Installing Postman
+
+- go to https://www.postman.com/downloads/ and download Postman
+
+=============================================================
+============== Setting up Express and Basic Routing
+
+1. Introduction to Express
+    - We’re going to set up Express for our project.
+    - Express is a web framework built on top of Node.js.
+
+2. Starter Project
+    - Open the starter project in VS Code.
+    - The project includes:
+        - Prettier configuration (for code formatting).
+        - ESLint configuration (for linting, but not using right now).
+        - Placeholder files for later (CSS, images, data).
+
+3. Setting Up package.json
+    - First step: Create a package.json file.
+        - Run the command npm init in terminal.
+        - Fill in details like:
+            - Name: natours
+            - Version: 1.0.0
+            - Description: "Learning Node, Express, and MongoDB"
+            - Entry point: app.js
+    - The package.json file is where project dependencies and configurations are stored.
+
+4. Installing Express
+    - To install Express:
+        - Run npm i express in the terminal.
+        - We’ll use version 4 of Express (as version 5 might introduce breaking changes).
+    - Express v4.16.4 installed (minor/patch version).
+
+5. Creating app.js
+    - Create a new file: app.js.
+        - app.js is where Express setup and configurations go.
+        - Standard convention: Express setup goes in app.js.
+
+6. Importing Express
+    - In app.js, require Express:
+        const express = require('express');
+
+    - express() returns an instance of the app that we assign to the app variable
+        const app = express();
+
+7. Setting up the Server
+    - To start the server, use the listen() method:
+        app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+        });
+
+    - This will start the server and listen for requests on the specified port.
+
+8. Understanding Express Internals
+    - Express is built on top of Node.js, so methods like app.listen() are similar to how we set up a server using Node.js’s http module.
+
+
+=============================================================
+============== APIs and RESTful API Design
+
+--> Overview of APIs and REST Architecture
+
+=> Introduction
+- Before we start building our API, it's important to understand the concept of APIs and REST architecture.
+- REST (Representational State Transfer) is the most common architectural style for building web APIs.
+- This course will focus on creating a RESTful API, and understanding the principles of REST is key to building effective APIs.
+
+=> What is an API?
+- API stands for Application Programming Interface.
+- APIs allow different software applications to communicate and exchange data.
+- A web API is a type of API that allows data to be sent over the internet to clients.
+- APIs are not limited to web development. For example:
+  - Node.js core modules (like the FS module) expose APIs for interaction.
+  - Browser APIs (such as the DOM API) allow manipulation of HTML elements.
+  - APIs also refer to methods and properties exposed by objects in programming languages (e.g., Java, JavaScript).
+
+Types of APIs:
+    1. RESTful APIs (Representational State Transfer) - Uses HTTP methods and follows REST principles.
+    2. SOAP APIs (Simple Object Access Protocol) - Uses XML messaging.
+    3. GraphQL APIs - Allows clients to request only the data they need.
+    4. WebSockets APIs - Supports real-time data exchange.
+    5. RPC APIs (Remote Procedure Call) - Invokes functions on remote servers.
+
+=> REST Architecture
+- REST stands for Representational State Transfer.
+- It provides a structured way to build APIs and is designed to be easy to consume.
+
+REST API Principles:
+    - Stateless: Each request is independent, and the server does not store client session state.
+    - Client-Server Architecture: Separation of client and server concerns.
+    - Cacheable: Responses can be cached to improve performance.
+    - Uniform Interface: Uses standard HTTP methods (GET, POST, PUT, DELETE).
+    - Layered System: APIs can be designed with multiple layers.
+
+=> Resources in REST
+- Resource: A resource is an object or a representation of something with associated data.
+  - Example resources: tours, users, reviews.
+  - Resources are represented using URLs (e.g., `/tours`).
+- Endpoints: These are the URLs where the API resources are exposed. 
+  - An endpoint for fetching tours might be `/tours`.
+
+HTTP Methods in REST APIs:
+    1. GET - Retrieve data from the server.
+    2. POST - Create new data on the server.
+    3. PUT - Update existing data.
+    4. DELETE - Remove data from the server.
+    5. PATCH - Partially update a resource.
+
+Status Codes in REST APIs:
+    - 200 OK: Request was successful.
+    - 201 Created: Resource was successfully created.
+    - 400 Bad Request: Client sent an invalid request.
+    - 401 Unauthorized: Authentication required.
+    - 403 Forbidden: Client does not have permission.
+    - 404 Not Found: Resource does not exist.
+    - 500 Internal Server Error: Server encountered an error.
+
+Authentication in REST APIs:
+    - API Keys - Simple token-based authentication.
+    - OAuth2 - Token-based authentication with authorization.
+    - JWT (JSON Web Token) - Securely transmits information.
+    - Basic Authentication - Username and password-based authentication.
+
+RESTful API Best Practices:
+    - Use meaningful resource names (e.g., `/users` instead of `/getUsers`).
+    - Use plural nouns in endpoints (e.g., `/products`).
+    - Implement versioning (e.g., `/v1/users`).
+    - Handle errors properly with meaningful messages.
+    - Secure API endpoints with authentication and authorization.
+    - Use pagination for large datasets.
+    - Implement rate limiting to prevent abuse.
+
+=============================================================
+============== Starting Our API_ Handling GET Requests
+
+You're starting on an exciting journey with the Natours API! 🚀 This project will give you solid experience with Node.js, Express, MongoDB, and Mongoose, covering everything from CRUD operations to authentication, authorization, and deployment.
+
+Here’s a quick breakdown of what you’ll be doing:
+    - Building the API first: Fetching, adding, updating, and deleting tour data using Express.
+    - Using Postman for testing: Ensuring your API routes return the correct responses.
+    - Implementing authentication: Allowing users to log in before booking tours.
+    - Structuring data efficiently: Using JSend for a clean API response format.
+    - Versioning the API: Using /api/v1 to ensure future updates don’t break existing implementations.
+
+Your first real task:
+    -  Set up the GET /api/v1/tours route to return all tours from tours-simple.json.
+    - Read the file using fs.readFileSync().
+    - Parse it into an array of objects.
+    - Return it in the response using res.json(), following JSend format.
+
+
+=============================================================
+============== Handling POST Requests
+
+1. Setting up a POST Route:
+    - You used app.post() to handle incoming POST requests to create a new tour at the /v1/tours endpoint.
+    - The handler function receives req (request) and res (response) objects.
+
+2. Middleware for Parsing Request Body:
+    - To access the request body in Express, you added middleware express.json(). This middleware will parse the incoming JSON body of the request.
+        app.use(express.json());
+
+3. Testing the POST Route:
+    - In Postman, you tested the route by sending a POST request with JSON data such as name, duration, and difficulty for the new tour.
+    - The data sent in the request body is logged in the console (req.body).
+
+4. Creating and Persisting the Data:
+    - After logging the request data, you created a new tour by adding an id to the received data, incrementing it from the last tour in the tours array.
+    - You used fs.writeFile() to save the updated tours data to a JSON file (tour-simple.json).
+
+5. Returning the Response:
+    - A new tour is returned with the 201 Created status code, and the new tour object is sent back in the response as JSON.
+
+ => Key Points:
+    - Middleware: express.json() is used to parse incoming JSON data.
+    - Generating IDs: The new ID for the tour is created by incrementing the id from the last tour in the array.
+    - Persisting Data: fs.writeFile writes the updated tours array back into a JSON file.
+    - Sending Response: The newly created tour is returned in the response with a 201 Created status.
+
+=>Testing:
+    1. Using Postman:
+        - Use a POST request to http://localhost:3000/v1/tours.
+        - In the Body, choose raw and select JSON as the format.
+        - Send a request like this:
+            {
+            "name": "Test Tour",
+            "duration": "10 days",
+            "difficulty": "easy"
+            }
+
+    2. Checking the Response:
+        - The response should return the new tour data with an incremented ID and the 201 status code.
+        - The new tour should also be logged in the server console and saved to the tour-simple.json file.
+
+
+
+=============================================================
+============== Responding to URL Parameters
+
+
+In this lecture, we will learn:
+
+1. Defining Parameters in the URL:
+   - URL parameters are defined in the route using a colon (`:`).
+   - For example, the route `/tour/:id` accepts an `id` parameter.
+   - The parameter can be anything, like `id`, `var`, or `X`.
+
+2. Accessing Parameters:
+   - Parameters are available in `req.params`.
+   - Example: If we use `req.params.id`, we get the value of the `id` parameter from the URL.
+
+3. Optional Parameters:
+   - To make a parameter optional, we can append a question mark (`?`) to it.
+   - Example: `/tour/:id?` means `id` is optional.
+   - If the parameter is not provided, it will be undefined.
+
+4. Finding the Tour by ID:
+   - We can use the `find` method on an array to find the element with the specified `id`.
+   - Example: `const tour = tours.find(tour => tour.id === req.params.id)`.
+
+5. Handling Non-Existent IDs:
+   - If the specified ID does not exist in the data, we should return a 404 error.
+   - Example: If the tour is not found, we send a `404 Not Found` response with the message "Invalid ID".
+
+6. Edge Case with ID Not Found:
+   - An easy way to handle cases where the ID is invalid is to check if it exceeds the array length.
+   - If the ID is greater than the length of the array, return a 404 error.
+
+7. Alternative Method for Error Handling:
+   - Instead of checking the ID length, we can first attempt to find the tour, and if it doesn't exist, send a `404 Not Found` response.
+
+8. Using JavaScript Methods:
+   - `req.params` is an object containing all parameters from the URL.
+   - The `find` method can be used to search for an element in the array based on conditions.
+   - Remember to ensure proper type conversion (e.g., converting string ID to a number).
+
+Summary:
+- Defined URL parameters using colon syntax in routes.
+- Accessed parameters using `req.params`.
+- Handled optional and non-existent parameters gracefully with error codes.
+- Implemented the `find` method to search for data in an array and return results based on the given parameters.
+
+
+
+
+=============================================================
+============== Handling PATCH Requests
+
+Handling PATCH Requests in Express (Update Data)
+
+1. HTTP Methods for Updating Data:
+   - PUT: Expects the entire updated object.
+   - PATCH: Expects only the properties that should be updated (easier to work with, especially for MongoDB and Mongoose).
+
+2. Setting up the PATCH request:
+   - The URL for the PATCH request is similar to the GET request: `api/v1/tours/:id` (where `:id` represents the tour to be updated).
+   - The PATCH request will update the data only for the specific ID provided.
+
+3. Why Use PATCH Over PUT:
+   - PATCH only requires the fields that are changing, while PUT requires the full object to update.
+   - This is more efficient, especially when using MongoDB and Mongoose, as it only modifies the necessary properties.
+
+4. Implementation (Steps):
+   - For a PATCH request:
+     - We expect the ID of the tour to be updated in the URL.
+     - If the ID is invalid, we send a 404 response ("Not Found").
+     - If the ID is valid, we send a 200 response with the updated data.
+
+5. Response Code:
+   - When updating a resource, always send a 200 status code.
+   - Example response: `{ "status": "success", "data": {updated tour data} }`.
+
+6. Testing with Postman:
+   - Change the HTTP method to `PATCH` and send a request with a JSON body to update the tour.
+   - Example body to change the tour's duration:
+     ```json
+     {
+       "duration": 15
+     }
+     ```
+   - The response will be a placeholder for now: `"updated tour here..."`, which will eventually return the actual updated data.
+
+7. Handling Invalid IDs:
+   - If an invalid ID is provided, the response will return a `404` error with a message `"Invalid ID"`.
+
+8. Next Steps:
+   - Now that the PATCH method is working, the next operation to implement is DELETE to complete the CRUD operations (Create, Read, Update, Delete).
+
+---
+
+Summary of Concepts Learned:
+   - PATCH is used to partially update data.
+   - PUT would be used to update an entire object (but PATCH is preferred in most cases).
+   - HTTP Status Codes: 
+     - `200` for success.
+     - `404` for resource not found (when an invalid ID is provided).
+   - Testing with Postman:
+     - Use the PATCH method to test updates.
+     - Send only the properties to be updated in the request body.
+
+
+
+
+=============================================================
+============== Handling DELETE Requests
+
+Handling DELETE Requests in Express (Delete Data)
+
+1. DELETE Requests:
+   - HTTP Method: The `DELETE` method is used to remove a resource from the server.
+   - We pass the ID of the resource we want to delete, similar to PATCH.
+
+2. Response for DELETE:
+   - For successful DELETE operations, we send a 204 No Content status.
+   - 204 No Content means that the resource was deleted successfully, but there's no content to send back.
+   - The data in the response will be null, as we're simply confirming that the resource no longer exists.
+
+3. Implementation (Steps):
+   - Change the HTTP method to `DELETE`.
+   - The URL will still include the resource ID (`/api/v1/tours/:id`).
+   - On success, the response status is `204`, and the body is empty (i.e., `null`).
+
+4. Response Code:
+   - 204: No content, confirming that the resource has been deleted.
+   - Example response:
+     ```json
+     {
+       "status": "success",
+       "data": null
+     }
+     ```
+
+5. Testing with Postman:
+   - Use the `DELETE` method to remove a specific tour.
+   - Example: Deleting tour number 7 (doesn't actually modify the data since it's just a simulation).
+   - Postman will return the `204 No Content` status without any data in the body.
+
+6. Key Differences (DELETE vs PATCH):
+   - DELETE: 
+     - No content is returned after successful deletion.
+     - Status code: `204` (No Content).
+   - PATCH: 
+     - Data is updated, and the updated data is returned.
+     - Status code: `200` (OK).
+
+7. Final Steps:
+   - We've now implemented the DELETE request, completing the basic CRUD operations (Create, Read, Update, Delete).
+   - Next steps include improving code organization and following best practices.
+
+---
+
+Summary of Concepts Learned:
+   - DELETE: Used to remove a resource.
+   - Response for DELETE: 
+     - `204 No Content` status.
+     - Data is `null`, indicating the resource is deleted.
+   - Testing DELETE in Postman:
+     - Use `DELETE` method and pass the resource ID to test deletion.
+     - Response will show `204 No Content`.
+   - CRUD Completion:
+     - CRUD operations are now fully implemented: Create, Read, Update, and Delete.
+
+
+
+
+=============================================================
+============== Refactoring Our Routes
+
+// Refactoring Route Handlers for Better Code Organization
+
+1. Current Problem:
+   - Routes and route handlers are written together, making it difficult to see what routes exist and how they work.
+   - It's hard to maintain and scale when everything is cluttered.
+
+2. Solution:
+   - Separate the route definitions from the handler functions to make the code more readable and organized.
+
+---
+
+3. Step 1: Create Separate Handler Functions
+   - Instead of placing the logic directly in the route, create handler functions to handle requests.
+
+   ```javascript
+   const getAllTours = (req, res) => { 
+     // logic to get all tours 
+   };
+
+   const getTour = (req, res) => { 
+     // logic to get one tour 
+   };
+
+   const createTour = (req, res) => { 
+     // logic to create a tour 
+   };
+
+   const updateTour = (req, res) => { 
+     // logic to update a tour 
+   };
+
+   const deleteTour = (req, res) => { 
+     // logic to delete a tour 
+   };
+
+// Step 2: Refactor Routes
+
+// Before Refactoring (Routes and Handlers Together)
+app.get('/api/v1/tours', (req, res) => {
+  // Logic to get all tours
+});
+
+app.post('/api/v1/tours', (req, res) => {
+  // Logic to create a new tour
+});
+
+app.get('/api/v1/tours/:id', (req, res) => {
+  // Logic to get a single tour by ID
+});
+
+app.patch('/api/v1/tours/:id', (req, res) => {
+  // Logic to update a tour
+});
+
+app.delete('/api/v1/tours/:id', (req, res) => {
+  // Logic to delete a tour
+});
+
+// After Refactoring (Separate Handlers)
+app.route('/api/v1/tours')
+  .get(getAllTours)    // GET request: Get all tours
+  .post(createTour);   // POST request: Create a new tour
+
+app.route('/api/v1/tours/:id')
+  .get(getTour)        // GET request: Get a specific tour by ID
+  .patch(updateTour)   // PATCH request: Update a tour
+  .delete(deleteTour); // DELETE request: Delete a tour
+
+// Step 3: Separate Handlers into Functions
+
+// Before Separation (Route Handlers Inside Routes)
+app.get('/api/v1/tours', (req, res) => {
+  const tours = // logic to get all tours
+  res.status(200).json({ status: 'success', data: { tours } });
+});
+
+app.post('/api/v1/tours', (req, res) => {
+  const newTour = // logic to create a new tour
+  res.status(201).json({ status: 'success', data: { newTour } });
+});
+
+app.get('/api/v1/tours/:id', (req, res) => {
+  const tour = // logic to get a specific tour by ID
+  res.status(200).json({ status: 'success', data: { tour } });
+});
+
+app.patch('/api/v1/tours/:id', (req, res) => {
+  const updatedTour = // logic to update a tour
+  res.status(200).json({ status: 'success', data: { updatedTour } });
+});
+
+app.delete('/api/v1/tours/:id', (req, res) => {
+  // logic to delete a tour
+  res.status(204).json({ status: 'success', data: null });
+});
+
+// After Separation (Handlers in Separate Functions)
+const getAllTours = (req, res) => {
+  const tours = // logic to get all tours
+  res.status(200).json({ status: 'success', data: { tours } });
+};
+
+const createTour = (req, res) => {
+  const newTour = // logic to create a new tour
+  res.status(201).json({ status: 'success', data: { newTour } });
+};
+
+const getTour = (req, res) => {
+  const tour = // logic to get a specific tour by ID
+  res.status(200).json({ status: 'success', data: { tour } });
+};
+
+const updateTour = (req, res) => {
+  const updatedTour = // logic to update a tour
+  res.status(200).json({ status: 'success', data: { updatedTour } });
+};
+
+const deleteTour = (req, res) => {
+  // logic to delete a tour
+  res.status(204).json({ status: 'success', data: null });
+};
+
+// Routes now use the separated functions
+app.route('/api/v1/tours')
+  .get(getAllTours)
+  .post(createTour);
+
+app.route('/api/v1/tours/:id')
+  .get(getTour)
+  .patch(updateTour)
+  .delete(deleteTour);
+
+// Step 4: Chaining Routes to Minimize Redundancy
+
+// Before Chaining (Multiple Route Definitions)
+app.get('/api/v1/tours', getAllTours);
+app.post('/api/v1/tours', createTour);
+app.get('/api/v1/tours/:id', getTour);
+app.patch('/api/v1/tours/:id', updateTour);
+app.delete('/api/v1/tours/:id', deleteTour);
+
+// After Chaining (Route Methods Combined)
+app.route('/api/v1/tours')
+  .get(getAllTours)    // GET request: Get all tours
+  .post(createTour);   // POST request: Create a new tour
+
+app.route('/api/v1/tours/:id')
+  .get(getTour)        // GET request: Get a specific tour by ID
+  .patch(updateTour)   // PATCH request: Update a tour
+  .delete(deleteTour); // DELETE request: Delete a tour
+
+
+
+=============================================================
+============== Middleware and the Request-Response Cycle
+
+Express Development: Understanding the Request-Response Cycle
+
+1. Overview of Express Development
+   - Express development relies on understanding the request-response cycle.
+   - The request-response cycle forms the core of how Express applications work.
+
+2. Request-Response Cycle
+   - When a request is made to the server, Express creates a `request` and a `response` object.
+   - These objects hold the data that will be used to generate and send back a meaningful response.
+
+3. Middleware in Express
+   - Middleware: Functions that process the request or response objects.
+     - Middleware can manipulate the `request` or `response` or execute any other code.
+   - Middleware Example:
+     - `express.json()` (also known as `body-parser`) is used to access the request body.
+   - Middleware is executed between receiving the request and sending the response, hence the name "middleware."
+
+4. Middleware Stack
+   - All middleware used in an Express app is collectively referred to as the middleware stack.
+   - Order of Middleware: The order of middleware functions matters.
+     - Middleware defined first is executed first.
+     - The sequence of middleware in the code impacts how the request is processed.
+
+5. Middleware and Route Handlers
+   - In Express, route handler functions are also considered middleware.
+     - They act as middleware that executes only for specific routes.
+   - Examples of middleware:
+     - `express.json()` for request body parsing.
+     - Logging functionality.
+     - Setting HTTP headers.
+
+6. The Next Function
+   - In each middleware function, there is a `next` function.
+     - When `next()` is called, the next middleware in the stack is executed.
+     - This happens for every middleware until the final one.
+   - Note: Route handlers don't call `next()`. They send the response to the client, ending the cycle.
+
+7. Pipeline Visualization
+   - Think of the process as a pipeline where data flows from the request to the response:
+     - Request and Response Objects: These are processed by each middleware step-by-step.
+     - At the end of the last middleware, a response is sent back to the client.
+
+8. Final Middleware (Route Handlers)
+   - The last middleware is typically the route handler.
+     - It sends the response to the client, completing the request-response cycle.
+   - No `next()` is called in route handlers; the response is sent directly.
+
+9. Request-Response Cycle Recap
+   - The cycle involves:
+     1. An incoming request.
+     2. The request passing through all middleware functions.
+     3. A final response being sent back to the client.
+   - The process is linear and straightforward once the flow is understood.
+
+10. Importance of Understanding the Cycle
+    - It's essential to understand the request-response cycle as it forms the basis of Express development.
+    - Understanding the middleware stack and the order of operations is crucial for building efficient and error-free Express apps.
+
+
+
+
+=============================================================
+============== Creating Our Own Middlewar
+
+- Middleware is used to process requests and responses in the request-response cycle.
+- `app.use()` is used to add middleware to the middleware stack in Express.
+- The middleware function has access to three arguments:
+  - `request` (req) - The request object.
+  - `response` (res) - The response object.
+  - `next` - A function that must be called to pass control to the next middleware in the stack.
+
+Creating Our Own Middleware
+----------------------------
+- We can create our own middleware functions.
+- Middleware functions are added to the middleware stack using `app.use()`.
+- The third argument to the middleware function is `next`, which is essential to move to the next middleware or handler.
+- Without calling `next()`, the request-response cycle will be stuck, and the response will not be sent.
+
+Example Middleware:
+--------------------
+```js
+app.use((req, res, next) => {
+  console.log("Hello from the middleware 😊");
+  next();
+});
+```
+
+This middleware applies to every request since no specific route is defined.
+
+Order of Middleware Matters:
+-----------------------------
+- Middleware is executed in the order it's defined in the code.
+- The first middleware added will be executed before the later ones.
+- If a route handler is defined before middleware, it will end the request-response cycle, and the middleware won't be called.
+  - Example:
+    - If the route handler ends the cycle (using `res.json()`), later middleware won't be executed.
+
+Manipulating Request Object in Middleware:
+-------------------------------------------
+- We can manipulate the request object in the middleware.
+- Example: Adding current time to the `request` object.
+```js
+app.use((req, res, next) => {
+  req.requestTime = new Date().toISOString();
+  next();
+});
+```
+
+Testing Middleware:
+--------------------
+- After adding middleware, we can access the modified request in route handlers.
+- Example:
+```js
+app.get("/tours", (req, res) => {
+  console.log("Requested at:", req.requestTime);
+  res.json({ message: "Tours fetched" });
+});
+```
+
+- The middleware modifies the request, and route handlers can use that modified request data.
+
+Summary:
+--------
+- The request-response cycle involves multiple middleware functions that can manipulate request and response objects.
+- Middleware is executed in a linear, sequential manner, and the order in which they are defined matters.
+- Always call `next()` in middleware to pass control to the next function.
+- Middleware can be used globally for all requests or can be specific to certain routes.
+
+=============================================================
+============== Using 3rd-Party Middleware
+
+Using Morgan Middleware in Express
+
+1. Install Morgan:
+   - Open a new terminal in VS Code.
+   - Run the command: `npm install morgan`
+
+2. Why Use Morgan?:
+   - Morgan is a popular logging middleware for Express.
+   - It helps log HTTP request data directly in the console, making development easier.
+
+3. Add Morgan to Code:
+   - Require morgan at the top of your file:
+     ```javascript
+     const morgan = require('morgan');
+     ```
+   - Use `morgan` as middleware:
+     ```javascript
+     app.use(morgan('dev'));
+     ```
+     - `'dev'` is a predefined format for logging, and you can choose from other formats as needed.
+
+4. Code Structure:
+   - Organize your code with comments:
+     ```javascript
+     // First Middlewares
+     // Your middleware like morgan here
+     
+     // Routes
+     // Your route handlers here
+
+     // Server Start
+     // Your server start code here
+     ```
+
+5. How Morgan Works:
+   - The `morgan` function returns another middleware function that has the standard signature `(req, res, next)`.
+   - This middleware logs request information (method, URL, status code, etc.) and calls `next()` to pass control to the next middleware.
+
+6. Log Output:
+   - Sample log output when using the `'dev'` format:
+     ```txt
+     GET /api/users 200 25ms 1.2KB
+     ```
+     - Logs include HTTP method, URL, status code, response time, and response size.
+
+7. Testing Logging:
+   - To test the logging, make an HTTP request:
+     ```bash
+     curl http://localhost:3000/api/users
+     ```
+   - For invalid routes, Morgan will display logs for 404 errors in a different color.
+
+8. Other Morgan Formats:
+   - `'tiny'`: More concise logs with less detail.
+   - `'common'`: Standard logs, similar to Apache logs.
+   - `'combined'`: Includes more detailed information about the request.
+
+9. Saving Logs to File:
+   - Although Morgan can log to the console, you can also save logs to a file for production use, but for now, it's sufficient to log to the console.
+
+10. Using Other Middleware:
+    - Express offers many other useful middlewares that you can explore on their official website (expressjs.com). Examples include `body-parser` for parsing request bodies and more.
+    - You can also find other recommended middleware in the Express documentation.
+
+11. Takeaway:
+    - Morgan is a helpful logging tool for development and debugging.
+    - Make sure to use it during development to track HTTP requests.
+    - You can explore other formats or save logs to files depending on your needs.
+
+
+=============================================================
+============== Implementing the _Users_ Routes
+
+Implementing Routes for Users Resource in Express
+
+1. Objective:
+   - We're adding routes for the `users` resource in the API.
+   - This is similar to the `tours` resource but specific to users (e.g., for creating accounts and managing roles).
+
+2. Route Setup:
+   - Start by defining the route structure:
+     ```javascript
+     app.route('/api/v1/users')
+     ```
+     - This is where we'll handle requests to the `/users` endpoint.
+
+3. Handling GET and POST:
+   - GET request without an ID will fetch all users.
+     ```javascript
+     app.route('/api/v1/users')
+       .get(getAllUsers);  // Handle GET request to fetch all users
+     ```
+   - POST request will create a new user.
+     ```javascript
+     app.route('/api/v1/users')
+       .post(createUser);  // Handle POST request to create a new user
+     ```
+
+4. Handling GET with ID:
+   - GET request with an ID will fetch a specific user.
+     ```javascript
+     app.route('/api/v1/users/:id')
+       .get(getUser);  // Handle GET request to fetch a specific user
+     ```
+
+5. Handling PATCH and DELETE:
+   - PATCH request will update user information.
+     ```javascript
+     app.route('/api/v1/users/:id')
+       .patch(updateUser);  // Handle PATCH request to update user
+     ```
+   - DELETE request will delete a user.
+     ```javascript
+     app.route('/api/v1/users/:id')
+       .delete(deleteUser);  // Handle DELETE request to remove user
+     ```
+
+6. Route Structure:
+   - Follow the structure of routes, similar to the `tours` resource:
+     - GET for retrieving data (all or specific user).
+     - POST for creating new resources.
+     - PATCH for updating resources.
+     - DELETE for deleting resources.
+
+7. Handling Errors:
+   - Placeholder functions are created for each route.
+   - For now, these functions will return an internal server error (500):
+     ```javascript
+     res.status(500).json({
+       error: 'This route is not yet defined'
+     });
+     ```
+
+8. Creating Functions:
+   - Functions for handling routes:
+     - getAllUsers: Placeholder function for retrieving all users.
+     - getUser: Placeholder function for retrieving a single user.
+     - createUser: Placeholder function for creating a user.
+     - updateUser: Placeholder function for updating user data.
+     - deleteUser: Placeholder function for deleting a user.
+
+9. Save API Requests:
+   - Save these requests in a collection for future testing.
+   - Organize saved requests by resource (e.g., create a folder for `users` and `tours`).
+
+10. Code Cleanup:
+    - At this point, the code is not separated into different files, so everything is in one file.
+    - This file will need refactoring later to separate routes and controllers (handlers) into their own files.
+
+11. Next Step:
+    - In the next video, we will separate the different pieces of the code (routes and controllers) into different files for better structure.
+
+
+
+
+=============================================================
+============== Creating and Mounting Multiple Routers
+
+- In this lecture, we start getting more advanced by creating multiple routers and using a process called mounting.
+- The ultimate goal is to separate the code into multiple files:
+  - One file for the general routes
+  - One file for the routes of tours
+  - One file for the handlers (controllers) for tours
+  - One file for the routes of users
+  - One file for the handlers for users
+
+- The first step is creating separate routers for each resource (tours, users).
+  - This is done using `express.Router()` to create a new router.
+  - Example: `const tourRouter = express.Router()`
+
+- After creating a new router, use it instead of `app` for the routes related to that resource.
+  - For example, use `tourRouter` for `/api/version1/tours`.
+
+- To connect the router with the application, use it as middleware.
+  - This is done using `app.use('/api/version1/tours', tourRouter)`.
+  - This sets up the sub-application for the `tours` resource on the `/api/version1/tours` route.
+
+- When defining routes inside the router:
+  - Only specify the relative path, as the parent route is already set with `app.use`.
+  - Example: `tourRouter.get('/', getAllTours)` becomes `/api/version1/tours`.
+
+- The middleware works like a "mini application" that handles its own routes for the resource.
+  - A request for `/api/version1/tours/id` will match the `tourRouter` and enter its own set of routes.
+
+- After implementing the `tourRouter`, the same process is done for `userRouter`:
+  - Example: `const userRouter = express.Router()`
+  - Then use `app.use('/api/version1/users', userRouter)` to mount the users' routes.
+  
+- The process of "mounting the router" is explained.
+  - Mounting means connecting the router to a specific URL path.
+  - This allows the routes inside the router to be triggered when that path is matched.
+
+- Testing after creating routers confirms the functionality still works:
+  - Routes like `/api/version1/tours` and `/api/version1/users` work after mounting the new routers.
+
+- The next step will be to separate these routers and handlers into their own files.
+
+=============================================================
+============== A Better File Structure
+
+# Node.js Refactoring Notes
+
+=> 1. Refactoring Overview
+- Refactoring involves improving code structure and design without changing its functionality.
+- Aim: Enhance readability, maintainability, and performance.
+
+=> 2. Benefits of Refactoring
+- Cleaner code: Easier to understand and work with.
+- More maintainable: Reduced technical debt.
+- Increased performance: Can optimize slow sections of code.
+
+=> 3. Key Refactoring Techniques
+==> a) Modularization
+- Break large files into smaller, manageable modules.
+- Each module should have a single responsibility.
+  
+==> b) Code Duplication
+- Eliminate duplicate code by creating reusable functions or classes.
+
+==> c) Naming Conventions
+- Use descriptive names for variables, functions, and classes.
+- Follow a consistent naming style (camelCase, PascalCase, etc.).
+
+==> d) Remove Dead Code
+- Remove unused variables, functions, and imports.
+
+==> e) Simplify Logic
+- Avoid deeply nested conditions.
+- Use simpler or more efficient algorithms.
+
+=> 4. Node.js Specific Refactoring Tips
+- Use async/await to replace callbacks for better readability.
+- Avoid using callback hell by modularizing logic.
+- Use promises for handling asynchronous code.
+
+=> 5. Refactoring Example
+==> Before Refactoring
+```javascript
+const fs = require('fs');
+
+fs.readFile('data.json', 'utf8', (err, data) => {
+  if (err) {
+    console.error(err);
+    return;
+  }
+  let parsedData = JSON.parse(data);
+  console.log(parsedData);
+});
+
+==> After Refactoring
+```javascript
+const fs = require('fs').promises;
+
+async function readFile() {
+  try {
+    const data = await fs.readFile('data.json', 'utf8');
+    console.log(JSON.parse(data));
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+readFile();
+
+
+=> Testing After Refactoring
+    - To test this refactored function, we can run the code in an environment where a data.json file exists. Here's how to perform the test:
+        1. Create a data.json file: Create a data.json file in the same directory where your JavaScript file resides. For example, the data.json file can contain:
+            {
+            "name": "John Doe",
+            "age": 30
+            }
+
+        2. Run the Node.js script: In your terminal, navigate to the directory where your script is located and run:
+            node yourScriptName.js
+
+        3. Check the output: If the file exists and is in the correct format, the script will output the content of the JSON file:
+            {
+            "name": "John Doe",
+            "age": 30
+            }
+        If there’s an error (e.g., if data.json is missing or contains malformed JSON), it will print the error message to the console.
+
+=> Conclusion
+    - Refactored Code: The refactoring makes the code more readable and efficient by utilizing the fs.promises API, which simplifies handling asynchronous file operations. It eliminates the need for the traditional callback approach, making the code cleaner and easier to maintain.
+    - Testing: Testing involves checking whether the script can successfully read and parse the JSON file. If successful, the content will be printed to the console. If there are any issues (e.g., the file is missing, or there's a syntax error in the JSON), it will log an appropriate error message.
+
+    - Advantages of Refactoring:
+        - Better error handling with try-catch.
+        - Simpler and more readable code by using async/await.
+        - Easier to manage with asynchronous operations using promises.
+
+=> Refactoring helps enhance the readability, error handling, and maintainability of the code.
+
+
+=============================================================
+============== Param Middleware
+
+=> Param Middleware in Express
+
+- Definition: 
+  Param middleware is middleware that runs only for specific parameters in the URL. 
+  For example, if we want middleware to only run when there's an `id` parameter in the URL, we can use param middleware.
+
+---
+
+=> Setting Up Param Middleware
+
+1. Access the Router:
+   - On the router, use the `.param()` method.
+   - Syntax: 
+     ```javascript
+     router.param('id', middlewareFunction);
+     ```
+
+2. Middleware Function:
+   - The middleware function will have access to:
+     - `req` (request object)
+     - `res` (response object)
+     - `next` (next middleware function)
+     - `val` (the value of the parameter, e.g., `id`).
+
+3. Example:
+   ```javascript
+   router.param('id', (req, res, next, val) => {
+     console.log(`Tour id is ${val}`);
+     next();
+   });
+
+Testing Param Middleware:
+- Param middleware runs only for specific parameters in the URL.
+- In the example, the parameter to watch for is the `id`.
+- The middleware can log the `id` from the request URL.
+- To test, if there is no `id` in the URL, the middleware doesn't run.
+- When the `id` is provided, the middleware is triggered and logs the `id` value.
+
+Middleware in Sub-Routers:
+- Param middleware is applied only in the relevant router, not globally.
+- If we define the middleware in the `tourRouter`, it will only run for routes related to `tourRouter`.
+- For example, it won't run for user routes even if the URL contains an `id`.
+
+Practical Use Case of Param Middleware:
+- A practical use case of param middleware is to validate the `id` before reaching the handler functions.
+- Instead of repeating validation logic in each handler function, create a middleware to check if the `id` is valid.
+- This middleware will run before the controller function, preventing invalid `id` from reaching the business logic.
+- For invalid `id`, return an error response early in the middleware.
+
+Refactoring with Middleware:
+- Refactor code to avoid duplication and reduce clutter in controller functions.
+- Move repeated logic (such as ID validation) to a separate middleware function like `checkID`.
+- In the middleware, check for the validity of the `id`, and send an error response if invalid.
+- Ensure that after sending the error response, you stop the request-response cycle by using `return` in the middleware.
+
+Return Statements in Middleware:
+- Always use `return` after sending a response in middleware to prevent the middleware stack from continuing.
+- If `next` is called after sending a response, it could lead to an error because multiple responses would be sent.
+- Using `return` ensures the middleware stops executing after sending the response and prevents unexpected behavior.
+
+Final Thoughts on Param Middleware:
+- Param middleware is a useful tool for parameter-specific validation.
+- It ensures that the middleware only runs for relevant routes, making it more efficient.
+- It allows for cleaner and more modular code by reducing redundancy in controllers.
+- This is in line with Express's philosophy of using middleware as a pipeline for request handling.
+- After applying this middleware, validation is centralized, and new routes don’t need to repeat the same logic.
+
+=============================================================
+============== Chaining Multiple Middleware Functions
+
+- Chaining Multiple Middleware Functions for the Same Route:
+  - Until now, we used a single middleware function for each route.
+  - Example: In a POST request, we only passed the `createTour` handler.
+  - Now, we will chain multiple middleware functions together for the same route.
+
+- Why Chain Middleware Functions?
+  - Chaining middleware allows us to separate concerns in the code.
+  - For example, before creating a tour, we might want to check if the request body has the required data (e.g., `name`, `price`).
+
+- Creating the `checkBody` Middleware Function:
+  - Challenge: Create a middleware to check if the request body contains the `name` and `price` properties.
+  - If either is missing, send a 400 (Bad Request) status code and an error message ("Missing name or price").
+  
+- Steps to Create Middleware:
+  1. Define a new function `checkBody` that takes `req`, `res`, and `next` as parameters.
+  2. Check if `req.body.name` or `req.body.price` is missing.
+  3. If either is missing, return a 400 status code with the message "Missing name or price".
+  4. If both are present, call the `next()` function to continue to the next middleware.
+
+- Adding Middleware to the Route Handler:
+  - After creating the `checkBody` function, add it to the POST request handler before `createTour`.
+  - Example: `app.post('/tour', tourController.checkBody, tourController.createTour)`.
+  - This way, `checkBody` runs first, and if the validation passes, `createTour` is called.
+
+- Testing the Middleware:
+  - If the request body is missing `name` or `price`, the middleware returns a 400 status and an error message.
+  - If the request body contains both `name` and `price`, the middleware passes the request to the `createTour` handler.
+
+- Analyzing the Flow:
+  - When a POST request hits the route, the middleware functions are executed in order.
+  - The first middleware checks the body for required properties.
+  - If validation fails, it sends a 400 response.
+  - If validation succeeds, the request continues to `createTour`, and the tour is created.
+
+- Practical Use Cases for Middleware Chaining:
+  - Middleware can handle various checks like authentication, data validation, or logging.
+  - Example: Before creating a tour, we could check if the user is logged in or has the necessary permissions.
+
+- Benefits of Chaining Middleware:
+  - Keeps the controller (e.g., `createTour`) focused on its main responsibility—creating a tour.
+  - Any logic not directly related to creating the tour can be handled by separate middleware.
+  - Makes the code more modular and easier to manage.
+
+- Summary:
+  - Middleware chaining is a powerful feature in Express for separating concerns and creating cleaner, modular code.
+  - The order of middleware execution is important—middleware functions are executed in the order they are defined.
+
+
+=============================================================
+============== Serving Static Files
+
+--> Express - Serving Static Files
+
+=> What are Static Files?
+- Static files are files that are stored in the filesystem and are not dynamically generated by the server.
+- Examples: HTML files, images, CSS, JavaScript files, etc.
+
+=> Why Can't We Access Static Files Directly?
+- Without using specific routes, we cannot access static files (e.g., overview.html) from the browser directly.
+- In Express, we need to configure middleware to serve these static files.
+
+=> How to Serve Static Files in Express:
+1. Using `express.static` Middleware:
+   - `express.static` is a built-in middleware in Express used to serve static files.
+   - It makes files in a folder (like `public`) accessible via a URL path.
+
+2. Steps:
+   - Step 1: Call `express.static` middleware.
+   - Step 2: Specify the folder where the static files are located (e.g., `public`).
+   - Code Example:
+     ```javascript
+     app.use(express.static(path.join(__dirname, 'public')));
+     ```
+     This line tells Express to serve static files from the `public` folder.
+
+3. Accessing Static Files:
+   - If a file is stored in the `public` folder, you can access it directly via the URL without needing to specify `public` in the path.
+   - For example:
+     - `http://localhost:3000/overview.html`
+     - `http://localhost:3000/images/pin.png`
+
+=> Why Don't We Need to Specify `public` in the URL?
+- The `express.static` middleware treats the `public` folder as the root directory for static files.
+- When you access a file, Express looks for it inside the `public` folder, making the `public` part of the path unnecessary in the URL.
+
+=> Testing Static File Serving:
+- To test, open the browser and type the following URLs:
+  - `http://localhost:3000/overview.html`
+  - `http://localhost:3000/images/pin.png`
+- Files served should be displayed correctly if placed in the correct folder.
+
+=> Common Issues:
+- 404 errors for missing files: This happens if the static file or image is not found in the specified folder.
+- Don't treat static files as routes: If the path looks like a route (e.g., `/image`), Express tries to route it, leading to errors.
+
+=> Requests for Static Assets:
+- Every file requested by the browser (like images or CSS) triggers a separate HTTP request to the server.
+- In the console, you can see multiple requests for different assets (images, CSS) and their corresponding status codes.
+
+=> Summary:
+- Express's `express.static` middleware is used to serve static files.
+- Files placed in the `public` folder can be accessed directly by their names in the URL.
+- Express doesn't treat static files as routes but serves them directly from the folder.
+
+Next up: Environment variables and setting up ESLint in VS Code.
+
+
+=============================================================
+============== Environment Variables
+
+Environment Variables in Node.js and Express
+
+- Environment variables are global variables used to define the environment in which a Node.js application is running.
+- Common environments: 
+  - Development
+  - Production
+- Environment variables can control configurations like:
+  - Different databases for development vs production.
+  - Enabling or disabling logging and debugging.
+
+Express sets the default environment to 'development', which is why it's often used during development.
+  
+Setting and Viewing Environment Variables:
+- `console.log(process.env)` displays all environment variables in the current Node process.
+- The environment variable `NODE_ENV` is often used to distinguish between development and production.
+- `process.env.NODE_ENV` holds the current environment setting (e.g., 'development', 'production').
+
+Setting Environment Variables in the Terminal:
+- Example command to set environment variable: 
+  `NODE_ENV=development node server.js`
+- This will set `NODE_ENV` to 'development' for that session.
+- You can also set custom environment variables like `X=23` with this command.
+
+Using Environment Variables in the Application:
+- Common usage: Configure sensitive data (e.g., database credentials, API keys).
+- Use `.env` file to store environment variables for better manageability.
+
+Setting Up the `.env` File:
+1. Create a `.env` file at the root of your project.
+2. Define variables in `KEY=VALUE` format (e.g., `USER=Jonas`, `PASSWORD=123456`).
+3. Install `dotenv` package to load environment variables from `.env` file:
+   `npm install dotenv`
+4. Add the following code to read variables from the `.env` file:
+   ```js
+   require('dotenv').config();
+5. Variables are now accessible via process.env.VARIABLE_NAME.
+
+Example usage in a Node.js application:
+
+```js
+require('dotenv').config();
+
+const express = require('express');
+const app = express();
+
+// Access environment variables
+const user = process.env.USER;
+const password = process.env.PASSWORD;
+const port = process.env.PORT || 3000;
+
+// Use environment variables in the application
+app.get('/', (req, res) => {
+  res.send(`Hello, ${user}! Welcome to our app.`);
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
+
+- In the example above:
+    - The USER, PASSWORD, and PORT environment variables are read from the .env file and used within the app.
+    - If the PORT environment variable isn't defined in the .env file, the server will default to port 3000.
+
+- Setting Up for Deployment:
+    - When deploying the application to a production server, the environment variables will need to be configured on the server itself.
+    - For example, when using services like Heroku, AWS, or DigitalOcean, you can configure environment variables through their respective dashboards or CLI tools.
+    - Make sure to never commit your .env file to version control. To prevent this, add .env to your .gitignore file.
+
+- Example of .gitignore file:
+        .env
+        node_modules/
+
+=============================================================
+============== Setting up ESLint + Prettier in VS Code
+
+1. ESLint Overview:
+    - ESLint helps improve code quality by highlighting potential errors or bad coding practices.
+    - ESLint is configurable, allowing you to define which rules to enforce.
+
+2. Installation Steps:
+    - Install the ESLint extension in VS Code.
+    - Install necessary packages via npm install:
+        - ESLint
+        - Prettier
+        - ESLint config Prettier
+        - ESLint plugin Prettier
+        - ESLint config Airbnb (popular style guide)
+        - ESLint plugins for React, Node, JSX, etc.
+
+3. Config Files:
+    - Prettier config (.prettierrc) already set to use single quotes.
+    - ESLint config (.eslintrc) setup:
+        - Airbnb style guide
+        - ESLint rules (e.g., no unused variables, no console logs)
+
+4. ESLint Rule Configurations:
+    - Rules can be turned on/off or set to show warnings instead of errors (e.g., no console.log, unused variables).
+
+5. Handling Errors:
+    - Errors appear in VS Code under the Problems tab (red for errors, green for warnings).
+    - Example: Assigning a value to a constant or using unused variables will trigger errors/warnings.
+
+6. Next Steps:
+    - To set up in future projects: Copy dependencies and config files from this project.
+
+=> Summary:
+    - ESLint and Prettier ensure clean, readable, and error-free code.
+    - Configure ESLint rules based on coding preferences.
+    - ESLint highlights issues in real-time, helping maintain code quality.
