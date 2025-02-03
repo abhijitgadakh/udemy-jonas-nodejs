@@ -1,1 +1,395 @@
 05_asynchronous-JS
+
+=============================================================
+============== Callback Hell & Asynchronous JavaScript
+
+- Issue with Too Many Callbacks
+    - Using too many callbacks inside one another leads to "callback hell."
+    - It makes code difficult to read and maintain.
+
+Example Overview
+    - Read a text file to get a dog breed.
+    - Use an API request to fetch a random image of that breed.
+    - Save that image URL into another text file.
+
+Dog API
+    - API used: DOG.CEO API
+    - Endpoint: https://dog.ceo/api/breed/{breed}/images/random
+    - Returns a random image URL of the given breed.
+
+Reading a File Asynchronously
+    - Use the fs (file system) module in Node.js.
+    - Read the file using fs.readFile().
+    - Syntax:
+    fs.readFile('filePath', 'utf-8', (err, data) => {  
+        if (err) return console.log(err);  
+        console.log(data);  
+    });
+
+
+- Making an HTTP Request
+    - Fetch data from an API using https.request() or external libraries like Axios.
+    - The request runs asynchronously and uses a callback to handle the response.
+
+- Problem with Callbacks (Callback Hell)
+    - Nesting multiple callbacks makes the code unreadable.
+    - Difficult to debug and manage.
+    - Example of callback hell:
+        fs.readFile('dog.txt', 'utf-8', (err, breed) => {
+            if (err) return console.log(err);
+            request(`https://dog.ceo/api/breed/${breed}/images/random`, (err, res, body) => {
+                if (err) return console.log(err);
+                fs.writeFile('dog-img.txt', body, err => {
+                if (err) return console.log(err);
+                console.log('File saved!');
+                });
+            });
+        });
+
+- Solutions to Callback Hell
+- Promises → Instead of callbacks, use .then() chaining.
+- Async/Await → Makes asynchronous code look synchronous and easier to read.
+
+=============================================================
+============== From Callback Hell to Promises
+
+- Callback Hell Problem:
+    - This can be solved using Promises instead of callbacks.
+    - Callback hell happens when callbacks are nested within each other, making code hard to read and maintain.
+
+- What is a Promise?
+    - A Promise represents a value that will be available in the future.
+    - It's like telling the server: "I need some data, let me know when you're done fetching it."
+
+- Promise States:
+    1. Pending: Promise is still waiting for a result (no value yet).
+    2. Resolved: Promise has successfully received the result.
+        - This can be fulfilled (success) or rejected (error).
+    3. Rejected: If there's an error during the request, the promise gets rejected.
+
+- How Promises Work:
+    - A promise is returned immediately when a request is made, even though the data is not available yet.
+    - Example: Using the super agent library to make requests. It returns a promise right when the request is made, and we can handle that later.
+
+-Consuming Promises:
+    - Use the .then() method to handle a promise once it's resolved.
+        - Pass a callback function to .then().
+        - The callback will be executed once the promise resolves, and the result is passed into it as an argument.
+        - Example with .then():
+
+            fetch('url')
+            .then(response => {
+                // This function will run once the promise is resolved
+                console.log(response);
+            });
+
+- Handling Errors with Promises:
+    - A promise can be rejected if there’s an error (like an incorrect dog breed).
+    - The .catch() method is used to handle errors from rejected promises:
+        fetch('url')
+        .then(response => {
+            console.log(response);
+        })
+        .catch(error => {
+            // This function will run if there's an error
+            console.error(error);
+        });
+
+- Benefits of Promises:
+    1. Avoid Nested Callbacks: Promises allow you to chain multiple .then() calls instead of nesting callbacks.
+        - This makes your code cleaner and more maintainable.
+    2. Error Handling: With .catch(), it's easier to handle errors in one place instead of repeating error handling logic in every callback.
+
+- Important Terms to Remember:
+    - Pending Promise: Promise that is still waiting for data.
+    - Resolved Promise: A promise that has received its data.
+    - Fulfilled Promise: The resolved promise that returns the data we need.
+    - Rejected Promise: A promise that has failed, often due to an error.
+
+
+=============================================================
+============== Building Promises
+
+- Promisifying readFile and writeFile functions
+    - We're making the readFile and writeFile functions return Promises instead of using callbacks.
+    - This means the functions will directly return a promise and will not require a callback function.
+
+- Creating the readFilePro function
+    - readFilePro will accept a filename and return a Promise.
+    - Promise constructor: This was introduced in ES6 (before ES6, JavaScript didn’t have promises).
+        - The constructor takes an executor function with two parameters:
+            - resolve: Marks the promise as fulfilled and returns a successful value.
+            - reject: Marks the promise as rejected and returns an error value.
+
+- Executor function
+    - This function runs as soon as the Promise is created and does the asynchronous work (in this case, reading the file).
+    - We will call fs.readFile with the filename and a usual callback that handles the error and data.
+    - We won’t modify readFile, but we’ll create a new function that wraps it and returns a promise.
+
+- How resolve and reject work
+    - resolve: When data is successfully retrieved, call resolve(data). The value of data will be available in the .then() method.
+    - reject: If there’s an error, call reject(error). The error message will be available in the .catch() method.
+
+    function readFilePro(filename) {
+        return new Promise((resolve, reject) => {
+            fs.readFile(filename, (err, data) => {
+            if (err) {
+                reject("Could not find the file 😞");
+            } else {
+                resolve(data);
+            }
+            });
+        });
+    }
+
+- Explanation
+    -> Promise Creation: We return a new Promise in readFilePro.
+    -> Executor Function: It calls fs.readFile with the filename.
+    -> Handling Success: If no error occurs, call resolve(data) to return the result.
+    -> Handling Error: If there’s an error, call reject(error) to return the error message.
+    -> resolve: The result from the promise will be available in the .then() handler.
+    -> reject: If the promise fails, the error message will be available in the .catch() handler.
+
+- Review of the Code:
+    - We created a function readFilePro that accepts a file name and returns a Promise.
+    - The Promise's executor function handles asynchronous work (reading the file).
+    - If successful, resolve is called with the data.
+    - If an error occurs, reject is called with an error message
+
+
+=============================================================
+============== Consuming Promises with Async_Await
+
+- Async/Await in JavaScript (ES8)
+    - Purpose: Async/await is a feature introduced in ES8 to simplify working with asynchronous code in JavaScript.
+    - Why Async/Await?
+        - Promises have improved code but can still involve complex .then() chains and callback functions.
+        - Async/await makes asynchronous code look and behave more like synchronous code, improving readability and understanding.
+
+
+- Understanding Async/Await
+    1. Async Function:
+        - To use async/await, you need to create an async function.
+        - Syntax
+        async function example() {
+            // code here
+        }
+
+        - Async Function:
+            - Always returns a Promise.
+            - Ensures that the code runs asynchronously without blocking the event loop.
+
+
+- How Await Works
+    1. Await Expression:
+        - The await keyword pauses the execution of the async function until the Promise it’s waiting for is resolved (fulfilled or rejected).
+        - Syntax:
+            let result = await somePromise;
+        
+        This is the equivalent of doing:
+            somePromise.then(result => {
+                // handle result
+            });
+
+    2. Behavior:
+
+    - When the await expression is used, it will pause the code at that line.
+    - Once the Promise resolves, the value is assigned to the variable (result), and the code continues.
+
+
+- Key Points:
+    1. Code Example Without Async/Await:
+        fetch('url')
+            .then(response => response.json())
+            .then(data => console.log(data));
+        
+    2. Code Example With Async/Await:
+        async function fetchData() {
+            const response = await fetch('url');
+            const data = await response.json();
+            console.log(data);
+        }
+        fetchData();
+
+    3. Error Handling:
+        - With async/await, you can handle errors using try/catch blocks.
+        - Example:
+            async function fetchData() {
+                try {
+                    const response = await fetch('url');
+                    const data = await response.json();
+                    console.log(data);
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+            fetchData();
+
+- Benefits of Async/Await:
+    - Cleaner Code: Async/await reduces the need for .then() chaining, making the code more readable.
+    - Error Handling: Error handling is simpler and cleaner with try/catch.
+    - No Blocking: Even though the code appears to run synchronously, it’s still asynchronous behind the scenes.
+    - 
+- What Happens Under the Hood?
+    - Even though async/await looks synchronous, it still uses Promises.
+    - Async functions always return a Promise.
+    - Await pauses execution until the Promise resolves, without blocking the event loop.
+
+- Practical Example:
+    1. Original Code (Using .then()):
+        function getDogPic() {
+            fetch('https://dog.ceo/api/breeds/image/random')
+                .then(res => res.json())
+                .then(data => console.log(data));
+        }
+        getDogPic();
+
+    2. Code With Async/Await:
+        async function getDogPic() {
+            const res = await fetch('https://dog.ceo/api/breeds/image/random');
+            const data = await res.json();
+            console.log(data);
+        }
+        getDogPic();
+
+- Handling Multiple Promises:
+    - Using Await with Multiple Promises: You can use await with multiple promises sequentially
+        async function getMultipleData() {
+            const dogData = await fetch('https://dog.ceo/api/breeds/image/random');
+            const catData = await fetch('https://api.thecatapi.com/v1/images/search');
+            console.log(dogData, catData);
+        }
+        getMultipleData();
+
+    - Parallel Requests (Promise.all): If you need to fetch multiple resources at the same time, you can use Promise.all():
+        async function getMultipleData() {
+            const [dogData, catData] = await Promise.all([
+                fetch('https://dog.ceo/api/breeds/image/random'),
+                fetch('https://api.thecatapi.com/v1/images/search')
+            ]);
+            console.log(dogData, catData);
+        }
+        getMultipleData();
+
+- Summary:
+    - Async/await is a great tool to simplify working with Promises.
+    - Use async to define an asynchronous function.
+    - Use await to pause execution until a Promise resolves.
+    - Handle errors with try/catch blocks.
+    - Async/await improves readability and eliminates the need for complex .then() chains.
+
+
+=============================================================
+============== Returning Values from Async Functions
+
+-> Notes on Async/Await and Promises
+
+1. Introduction to Async Functions:
+    - Async functions return a Promise by default.
+    - Async functions run in the background to avoid blocking the main thread.
+
+2. Behavior of Async Functions:
+    - When you call an Async function, it doesn't block the rest of the code from executing.
+    - It offloads the function to the background and immediately continues with the next lines of code.
+    - For example, console.log statements will appear before the logs from an Async function.
+
+3. Code Example:
+    - Adding console.log before and after the Async function
+        console.log('Step 1: Get dog pics');
+        await getDogPics();
+        console.log('Done getting dog pics');
+    
+    - Output will show the first two logs before the result of getDogPics is logged
+
+4. How Async Works in the Background:
+    - Async functions don't block the event loop. Once an Async function starts, it lets the rest of the code run and only returns a result when the background task is complete.
+    - Main takeaway: Async functions don't stop the execution flow, and the results come later when ready
+
+5. Returning from Async Function:
+    - Async functions can return values, but they always return a Promise.
+    - Example
+        async function getDogPics() {
+            return 'Ready';
+        }
+    - When you log the return value, you get a "Promise pending" because the Async function returns a promise by default.
+
+6. Handling the Promise Result:
+    - Since Async functions return Promises, you need to handle them with either .then() or await.
+    - If you use .then() to handle the resolved value
+        getDogPics().then((result) => console.log(result)); 
+
+7. Using .then() Method:
+    - You can chain .then() to handle the returned value from an Async function
+        getDogPics().then((result) => console.log(result));  // Logs "Ready"
+
+8. Promise States:
+    - The promise returned by an Async function starts in the pending state and resolves when the background task is completed.
+    - While the promise is pending, you cannot directly log the result (it shows as "Promise pending").
+
+9. To Access the Result Properly:
+    - Use await or .then() to properly handle the value once the promise resolves
+        const result = await getDogPics();  // Wait for the promise to resolve
+        console.log(result);  // Logs the resolved value
+
+- Summary:
+    - Async functions return promises.
+    - Promises are handled asynchronously, so you need to use .then() or await to access the final result.
+    - Async functions help avoid blocking the main thread while fetching data or performing other background tasks.
+
+
+=============================================================
+============== Waiting for Multiple Promises Simultaneously
+
+-> Async/Await - Running Multiple Promises Simultaneously:
+
+1. Introduction
+    - We're going to learn how to run multiple promises simultaneously to optimize code execution.
+
+2. Scenario: Fetching Multiple Random Dog Images
+    - If we want three random dog images instead of one, the naive approach would be waiting for each promise one after another.
+    - Problem: This would cause unnecessary waiting time.
+
+3. Solution: Run All Promises Simultaneously
+    - Approach: Instead of awaiting each promise immediately, we’ll store the promise itself and wait for all of them at once.
+    - Example: Call the API for each image and store the promise, but don’t await it immediately.
+
+4. Promise.all()
+    - Syntax
+        const result = await Promise.all([promise1, promise2, promise3]);
+
+    - This function accepts an array of promises and waits for all of them to resolve.
+    - Benefit: All the promises will run at the same time, improving efficiency.
+
+5. Breaking Down the Process:
+
+    - Step 1: Create promises for each API call.
+        let result1 = fetch(url1);
+        let result2 = fetch(url2);
+        let result3 = fetch(url3);
+
+    - Step 2: Use Promise.all() to run them in parallel.
+        let results = await Promise.all([result1, result2, result3]);
+
+    - Step 3: Process the results once all promises resolve.
+
+6. Accessing the Response Data:
+    - After running the promises, we need to access the resolved values.
+    - Using map() to Extract Values:
+        - Map through the response array and extract specific data like the image URL.
+            const images = results.map(result => result.body.message);
+
+7. Handle Errors:
+    - Remember, if one promise fails, the whole Promise.all() fails.
+    - Consider using try-catch blocks to handle potential errors.
+
+8.Returning the Results:
+    - Join the Results: Use .join() to combine the image URLs into a string with each URL on a new line
+        const imagesString = images.join('\n');
+
+9. Debugging and Error Handling:
+    - If you get an error such as “not defined”, check if you’re referencing the correct variables.
+
+10. Summary:
+    - By running promises in parallel with Promise.all(), we can make API calls more efficient and faster.
+    - Always use .map() when you need to extract specific data from an array of promises.
+    - Combine results properly to display or store them.
