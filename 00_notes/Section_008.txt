@@ -1,0 +1,1751 @@
+=========================================================
+================ Connecting Our Database with the Express App
+
+MongoDB Integration with Express Application
+
+ 1. Connecting to MongoDB Atlas
+    To connect your Express application to MongoDB Atlas, follow theseSteps:
+
+Step 1: Get the Connection String from Atlas
+    1. Go to your MongoDB Atlas dashboard.
+    2. Click on *Connect* → *Connect Your Application*.
+    3. Select *Node.js* as the environment to get the connection string.
+    4. Copy the connection string for your database.
+
+Step 2: Create Environment Variables
+    1. Add the following environment variables:
+    - `DATABASE_PASSWORD`
+    - `DATABASE`
+    
+    2. Replace `PASSWORD` placeholder in the connection string with your actual password.
+    3. Replace `test` (default database name) with your custom database name, e.g., `natours`.
+
+Step 3: Local Database Connection (Optional)
+    For local development, the MongoDB connection string will look like this:
+    ```js
+    mongodb://localhost:27017/natours
+
+Step 4: Connecting the MongoDB Database with Express Application
+    - Get the connection string from MongoDB Atlas.
+    - Select "Connect Your Application" option and choose Node.js.
+    - The connection string includes the username, password, and database name.
+    - Replace the password placeholder in the string with your actual password.
+
+Step 5: Set Up Environment Variables
+    - Create an environment variable for the database connection string in your configuration file (e.g., DATABASE).
+    - Use process.env.DATABASE_PASSWORD for the password to keep it secure.
+    - Ensure the database name (e.g., "natours") is in the connection string.
+
+Step 6: Install MongoDB Driver (Mongoose)
+    - Install Mongoose, a MongoDB driver that interacts with MongoDB databases and offers additional features.
+    - Install version 5 of Mongoose to avoid issues with the latest versions.
+    - Run: npm install mongoose@5
+
+Step 7: Configure Mongoose in server.js
+    - In server.js, require the Mongoose package.
+    - Use mongoose.connect() to connect to the database.
+    - Replace the password placeholder in the connection string with the actual password.
+    - Add some options to avoid deprecation warnings (useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false).
+    - Log a success message on a successful connection.
+
+Local Database vs Hosted Database
+    - Hosted Database (Atlas): Requires a connection string with username, password, and the database name (e.g., "natours").
+    - Local Database: Use the MongoDB default mongodb://localhost:27017/natours. Ensure your MongoDB server is running locally.
+    - You can switch between hosted and local by adjusting the environment variable.
+
+Clean Up Existing Data (Optional)
+    - If you want to reset the data, go to MongoDB Atlas, navigate to Collections, and delete the existing data.
+    - Make sure you enter the correct collection name before deleting it to avoid mistakes.
+
+Conclusion
+    - MongoDB is successfully connected to the Express application using Mongoose.
+    - Use environment variables to keep credentials secure.
+    - Switch between local and hosted databases as needed.
+    - Data cleanup can be done through MongoDB Atlas, but ensure the collection name is correct.
+
+=========================================================
+================ What Is Mongoose_
+
+What is Mongoose?
+    - Mongoose is an Object Data Modeling (ODM) library for MongoDB and Node.js.
+    - It provides a higher level of abstraction over the regular MongoDB driver.
+    - It's similar to how Express is a layer of abstraction over Node.js.
+    - Mongoose simplifies interacting with MongoDB by offering built-in features and utilities.
+
+Why use Mongoose?
+    - With Mongoose, we can easily model our data and define relationships between different data objects.
+    - It provides more functionality out of the box, which speeds up development and makes things easier.
+    - Features of Mongoose include:
+    - Schemas to model data and relationships.
+    - Easy data validation to ensure correct data types.
+    - A simple query API to interact with the database.
+    - Middleware to add custom functions before or after certain operations.
+
+Schemas in Mongoose
+    - A schema in Mongoose is where we define the structure of our data.
+    - It allows us to specify things like:
+    - Default values for certain fields.
+    - Data validation rules (e.g., email format, required fields).
+    - Once the schema is defined, we can create a model from it.
+    - The model is essentially a wrapper around the schema, allowing us to interact with the database (CRUD operations: Create, Read, Update, Delete).
+
+The Process:
+    1. Schema Definition: Define how the data will look (structure, validation, default values).
+    2. Model Creation: Create a model from the schema.
+    3. Use the model to interact with MongoDB (insert, find, update, delete).
+
+=========================================================
+================ Creating a Simple Tour Model
+
+1. Introduction to Mongoose Model
+- Mongoose is used for creating models to interact with MongoDB.
+- A model acts like a blueprint to create documents, similar to JavaScript classes that create objects.
+- Models allow you to perform CRUD operations (Create, Read, Update, Delete).
+
+2. Creating a Schema in Mongoose
+- To create a schema, use the mongoose.Schema() method. The schema defines the structure of your data.
+    const tourSchema = new mongoose.Schema({
+    name: String,
+    rating: Number,
+    price: Number
+    });
+
+- Here, name, rating, and price are the fields, and we specify their data types (String for name, Number for rating and price).
+
+3. Schema Type Options (Advanced)
+    You can add additional functionality to your fields with schema type options. Some examples:
+
+- Required Fields: Ensure that a field must be provided.
+    name: { type: String, required: true }
+
+- Custom Error Messages: Display custom error messages when a field is missing.
+    rating: { type: Number, required: [true, 'A tour must have a rating'] }
+
+- Default Values: Set default values for fields if they are not provided.
+    rating: { type: Number, default: 4.5 }
+
+4. Setting Unique Fields
+- To make a field unique and avoid duplicate entries, you can set unique: true.
+- name: { type: String, unique: true }
+
+5. Creating a Model from a Schema
+- To create a model from the schema, use mongoose.model():
+        const Tour = mongoose.model('Tour', tourSchema);
+- The model name should be capitalized (e.g., Tour).
+- This creates the model Tour, which is used to interact with MongoDB using the tourSchema.
+
+6. Recap of Mongoose Schema and Model
+- Schema: Describes the structure of the data and provides validation rules.
+- Model: A wrapper around the schema, used to interact with the database.
+- Mongoose provides built-in validators (e.g., required, unique).
+- You can define default values and add custom error messages for fields.
+
+7. Next Steps
+- The next video will guide you on creating a tour document using the model we just created.
+
+=========================================================
+================ Creating Documents and Testing the Model
+
+1. Creating Documents with Mongoose
+
+- We start by creating a new document using the `Tour` model, which we defined in the previous video.
+- We create a new tour document by calling `new Tour()` and passing an object with the necessary data:
+  - name: 'The Forest Hiker'
+  - rating: 4.7
+  - price: 497
+
+2. Document Instance
+
+- The document we create (e.g., `testTour`) is an instance of the `Tour` model.
+- As an instance of the model, it has several methods available to interact with the database.
+
+3. Saving the Document to the Database
+
+- To save the document to the MongoDB database, use the `save()` method.
+- `testTour.save()` returns a promise.
+- Use `.then()` to handle the saved document once it is successfully saved.
+- The result returned from `.then()` contains the saved document, including a unique `_id` auto-generated by MongoDB and any default values set in the schema.
+
+4. Handling Errors
+
+- Use `.catch()` to handle any errors when saving the document.
+- If the save operation fails, the error will be passed to `.catch()` and can be logged to the console.
+- Example: .catch((error) => { console.log('Error: 🔴', error); });
+
+
+5. Viewing the Saved Document
+
+- Once the document is saved, check the database to see the newly added document. MongoDB automatically creates the collection if it doesn't exist.
+- Example: In MongoDB Compass, you’ll see the `tours` collection and the document that was just saved.
+
+6. Duplicate Document Issue
+
+- If you attempt to save a document with a field that has a unique constraint (e.g., a duplicate tour name), MongoDB will throw an error.
+- Example: The name 'The Forest Hiker' was used before, and attempting to create another document with the same name results in a duplicate key error.
+- This is prevented by setting `unique: true` in the schema for fields that must be unique.
+
+7. Validation Errors
+
+- If you don’t provide required fields (e.g., price), Mongoose will throw a validation error.
+- The error message will reflect the validation rule set in the schema.
+- Example: 'A Tour must have a price' for the `price` field.
+- Mongoose also provides default values for non-required fields, such as the `rating` field, which defaults to `4.5`.
+
+8. Fixing Errors
+
+- To resolve errors:
+- Provide the missing fields (e.g., set a price).
+- The validation will pass, and the document will be successfully saved to the database.
+
+9. Conclusion
+
+- This is the first time we interact with the database using Mongoose to create and save documents.
+- We were able to successfully save documents and handle errors (both duplicate and validation).
+- Now, the database is updated with our new tour documents.
+
+10. Reflection
+
+- This process of saving and handling errors is fundamental when building applications with Express and MongoDB.
+- It’s a great feeling when you see your data correctly stored and retrieved from the database.
+
+=========================================================
+================ Intro to Back-End Architecture_ MVC, Types of Logic, and More
+
+Back-End Architecture - MVC Overview
+
+- Introduction to MVC:
+  - We haven't thought much about architecture so far, but as the app grows, it's essential to consider how we design the structure of our code.
+  - MVC (Model-View-Controller) is a widely used architecture that helps structure back-end code.
+  - This lecture introduces MVC in a simplified way.
+
+- MVC Architecture:
+  1. Model Layer:
+     - Deals with data and business logic of the app.
+     - Involves handling and manipulating data.
+  2. Controller Layer:
+     - Handles incoming requests, interacts with models, and sends responses back to the client.
+     - Manages application logic.
+  3. View Layer:
+     - Responsible for rendering templates and presenting data in a graphical interface.
+     - For this course, we are focusing on an API, so the view layer isn't essential for now.
+  
+- Why Use MVC?
+  - MVC allows for modular code, making it easier to maintain and scale the app.
+  - For smaller apps, MVC is often enough, though you can add more abstraction layers as needed.
+
+- MVC in Context of the App:
+  - Requests start at the router, which delegates them to the appropriate controller.
+  - The controller might interact with the model to fetch or manipulate data.
+  - The controller sends a response back to the client, often in the form of JSON.
+
+- Request-Response Cycle:
+  - The request hits the router.
+  - The router forwards the request to the correct controller.
+  - The controller interacts with the model (if needed) to fetch or modify data.
+  - The controller sends a response back to the client (often JSON for APIs).
+
+- Application vs Business Logic:
+  1. Application Logic:
+     - Code that handles technical details and app operations (requests, responses, etc.).
+     - Involves implementation and manages the interactions between models, views, and controllers.
+     - Example: Routing, middleware, request handling, etc.
+  2. Business Logic:
+     - Code that solves the actual business problem (the real-world problem your app is trying to address).
+     - Example: Creating new tours, validating user input, checking user credentials, etc.
+
+- Separating Logic in MVC:
+  - The goal is to separate business logic from application logic:
+    - Application logic goes in controllers (handling requests and responses).
+    - Business logic goes in models (deals with the data and rules of the business problem).
+  - Fat Models, Thin Controllers:
+    - We should offload as much business logic as possible into the models, making controllers lean and focused on managing requests and responses.
+
+=========================================================
+================ Refactoring for MVC
+
+MVC Refactoring - Tour Model Implementation
+
+- Refactoring Code:
+  - Now that we’ve learned about MVC, it’s time to refactor the code to fit the architecture better.
+  - We already have:
+    - Controller folder with tour and user controllers.
+    - Routes folder with all routes.
+  - What we need to add:
+    - A new model folder.
+    - Create a `tourModel.js` inside the models folder.
+
+- Steps to Refactor:
+  1. StepCreate the Models Folder:Step
+     - Inside the `models` folder, create `tourModel.js`.
+  2. StepMove Schema and Model Definition:Step
+     - Cut the schema and model declaration from the existing file.
+     - Place it into `tourModel.js`.
+     - Import Mongoose inside `tourModel.js`.
+     - Delete the test code.
+  3. StepDatabase Connection:Step
+     - Keep the database connection in the original file.
+     - The models themselves will live inside the `models` folder.
+  4. StepExporting the Model:Step
+     - Use `module.exports` to export the model from `tourModel.js`.
+
+- StepTour Model Creation:Step
+  - We created a simple `tourModel.js` in the `models` folder and exported it.
+  
+- StepImporting Tour Model in Controller:Step
+  1. Open `tourController.js`.
+  2. Import the model at the top:
+     - `const Tour = require('../models/tourModel');`
+  3. Remove the previous data import:
+     - The JSON data import is no longer needed.
+     - Comment out the old code as a reference or delete it entirely.
+  4. Clean Up the Code:
+     - Remove the old logic to fetch data from JSON and handle it via the model now.
+
+- StepError Handling (checkID Function):Step
+  - StepWe don’t need the `checkID` function anymoreStep:
+    - MongoDB will throw an error if we use an invalid ID, so this middleware is no longer necessary.
+    - This function was useful for understanding how middleware works, but it’s redundant now.
+    - Remove this function and its related import.
+
+- StepTour Routes Refactoring:Step
+  - In `tourRoutes.js`, the `checkID` middleware no longer exists.
+  - Remove the reference to `tourController.checkID`.
+  - Comment it out to remind yourself about the `.param()` middleware if you want to use it in future applications.
+  
+- Final Cleanup:
+  - We’ve cleaned up the code by removing unnecessary imports and references.
+  - At this point, the refactoring is done.
+  
+- Next Steps:
+  - In the next video, we’ll start implementing the core API functions:
+    - StepGet all toursStep
+    - StepCreate toursStep
+    - StepUpdate toursStep
+    - StepDelete toursStep
+
+=========================================================
+================ Another Way of Creating Documents
+
+- In this lecture, we are going to implement the 'createTour' function and handle creating documents in the database.
+- Previously, the API didn't work because we deleted all functionality to rebuild it using a real database.
+
+Steps to implement createTour:
+1. We're going to use the "Tour.create" method instead of creating a new tour object and using the "save" method. 
+   - Instead of:
+     ```javascript
+     const newTour = new Tour(data);
+     newTour.save();
+     ```
+   - We can do this:
+     ```javascript
+     Tour.create(data);
+     ```
+   - Difference: In the first example, we use the "save" method on a document, while in the second we call the "create" method directly on the model.
+
+2. The "create" method returns a promise, so we need to use async/await to handle it.
+   - Make the function async:
+     ```javascript
+     async function createTour(req, res) {
+       const newTour = await Tour.create(req.body);
+       // Send the result back to the client
+     }
+     ```
+   - This approach is cleaner than using .then() for promises.
+
+3. The request body (req.body) contains the data we want to save in the database.
+
+4. For error handling:
+   - Wrap the code in a try/catch block to handle errors like validation errors (e.g., missing required fields).
+   - If an error occurs, send a response with the error message:
+     ```javascript
+     try {
+       const newTour = await Tour.create(req.body);
+       res.status(201).json(newTour);
+     } catch (error) {
+       res.status(400).json({ message: "Invalid data sent" });
+     }
+     ```
+
+5. The "Tour.create" method will automatically handle validation based on the schema, so we don't need to manually check for fields like name, price, etc.
+
+6. When a required field is missing, Mongoose will return a validation error, and the promise will be rejected. This will be caught in the catch block.
+
+7. In case of an error, we send a 400 Bad Request status and a custom error message back to the client:
+   ```javascript
+   res.status(400).json({ message: "Invalid data sent" });
+
+8. The error response can be refined later by handling the error structure properly (e.g., better error messages).
+
+9. Testing in Postman:
+    - When we send valid data, we successfully create a new tour.
+    - If we try to create a tour without required fields, Mongoose will reject the promise, and we get an error message like "Validation failed."
+
+10. If the tour name is a duplicate, we will receive a "duplicate key" error.
+
+11. To handle async/await:
+    - The "Tour.create" method returns a promise, which we await to get the result.
+    - If the promise is rejected (due to validation errors, etc.), we catch the error in the catch block.
+
+12. The final "createTour" function
+    async function createTour(req, res) {
+    try {
+        const newTour = await Tour.create(req.body);
+        res.status(201).json(newTour); // Send success response with created tour
+    } catch (error) {
+        res.status(400).json({ message: "Invalid data sent" }); // Send error response
+    }
+    }
+
+13. MongoDB ignores any fields that are not in the schema, so only the data that matches the schema will be stored in the database.
+
+14. Recap:
+    - The "createTour" function is responsible for creating new tours.
+    - Use async/await to handle promises.
+    - Use try/catch to handle errors, especially validation errors.
+    - Send appropriate success or error responses.
+
+=========================================================
+================ Reading Documents
+
+1. StepGet All Tours Handler (getAllTours)Step
+   - We need to get all tours from the database using Mongoose.
+   - Use `Tour.find()` method, which queries the database for all documents in the "tour" collection.
+   - When no arguments are passed to `find()`, it returns all documents from the collection.
+   - `Tour.find()` returns a promise that needs to be handled asynchronously using `async` and `await`.
+   - The function should be `async`, and we store the result in a variable like `tours`.
+   - Wrap the code in a `try-catch` block to handle errors.
+   - In case of an error, return a 404 status with a failure message.
+   - After the data is retrieved, we return the results wrapped in a `data` property, and also return the total count of results.
+   - The `find()` method automatically converts MongoDB documents into JavaScript objects.
+   - Finally, test the route to ensure it returns the array of tours.
+
+2. StepGet Tour Handler (getTour)Step
+   - The goal of this handler is to retrieve a specific tour based on its unique ID.
+   - Use the `Tour.findById()` method instead of `find()` because we are looking for a single document by its ID.
+   - The ID comes from the route parameter (i.e., `req.params.id`), which is accessed via `req.params.id`.
+   - The route that calls this handler might look like `/tour/:id`, where `id` is the unique identifier of the tour.
+   - Use `req.params.id` to get the ID from the route.
+   - This will then be used with `findById()` to find the specific tour.
+   - `Tour.findById()` is a shorthand for `Tour.findOne({ _id: id })`, where `_id` is the MongoDB field for IDs.
+   - This method directly accepts the ID as a parameter, making it simpler to query the database for a single document.
+   - Wrap this in a `try-catch` block to handle potential errors (like if the ID does not match any document).
+   - If no document is found, return a `404` error with a message indicating no matching tour was found.
+   - Test the handler by passing a real ID from Postman (e.g., using an ID like `ac2` for a tour).
+
+3. StepGeneral Notes on Query Methods:Step
+   - `find()` is used to get all documents.
+   - `findOne()` is used to find a single document based on a filter (e.g., by ID).
+   - `findById()` is a helper method that simplifies querying by ID. It works the same way as `findOne({ _id: id })` but is more concise.
+   - Mongoose methods like `find()` and `findById()` automatically convert MongoDB documents into JavaScript objects.
+
+4. StepTesting and Error Handling:Step
+   - Always ensure you test the endpoints to verify that the correct data is being returned.
+   - Use `try-catch` to catch any unexpected errors, even when you don't expect validation errors.
+   - For error responses, you can set the status to `404` for "Not Found" errors or other appropriate status codes.
+   - Send a response with `status: 'fail'` and include the error message in the response.
+
+5. StepSummary of How Find Works:Step
+   - `Tour.find()` queries for all documents in the collection.
+   - `Tour.findById(id)` queries for a single document by ID.
+   - The results are returned as JavaScript objects, and the query methods return a promise.
+   - Using `async` and `await` makes handling asynchronous operations easier.
+   - Error handling using `try-catch` ensures that the server responds appropriately if anything goes wrong.
+
+6. StepNext Steps:Step
+   - In future videos, we will implement more advanced querying techniques like filtering, sorting, and pagination.
+
+=========================================================
+================ Updating Documents
+
+
+- Async Function: Start by making the update handler an async function and use a try-catch block to handle errors.
+- Find by ID and Update:
+    - Use findByIdAndUpdate() to query and update the document in a single operation.
+    - Pass the ID (req.params.ID) to find the document.
+    - Pass req.body to update the document with new data.
+
+- Options:
+    - Add the new: true option so the method returns the updated document (not the original).
+    - Add runValidators: true to ensure schema validators are run again during the update process.
+
+- Query Method:
+    - Mongoose’s findByIdAndUpdate() returns a query object.
+    - You can use .exec() or await to execute the query.
+
+- Save and Return:
+    - Use await for the query and save the result to a variable.
+    - Send the updated document back to the client.
+
+- Mongoose Documentation:
+    - Understand how to use Mongoose methods by reviewing the documentation (important for finding additional details).
+    - Example: tour.findByIdAndUpdate() accepts ID, data to update, and options object.
+
+- ES6 Syntax:
+    - If the key and value in the object are the same (e.g., tour: tour), use shorthand syntax (tour).
+
+- Postman Testing:
+    - When testing the update, modify a field (e.g., price) in the body and ensure the document updates correctly.
+    - Use a PATCH request to update only the changed fields.
+    - Validate that the update reflects in the response and the database (e.g., updated price).
+
+- Validators:
+    - Running validators ensures that the updated data adheres to the schema.
+    - Example: If the price field is a string instead of a number, it will throw a validation error.
+
+- PATCH vs PUT:
+    - PATCH: Updates only the specified fields in the document.
+    - PUT: Replaces the entire document with the new data.
+    - In this case, PATCH is preferred because it only updates the fields that are passed in the body.
+
+- Summary:
+    - Update documents in Mongoose using findByIdAndUpdate().
+    - Use options like new and runValidators to ensure correct behavior.
+    - Always send back the updated document to the client.
+
+=========================================================
+================ Deleting Documents
+
+Final CRUD Operation: Deleting Documents (Delete Tour)
+
+1. Overview:
+   - Deleting documents is the final CRUD operation.
+   - This should be similar to updating the document, with minor differences.
+
+2. Challenge:
+   - The task is to implement the `delete` operation.
+   - Use `findByIdAndDelete` to delete a document by its ID.
+   - Look at the documentation and the other handler functions for guidance.
+
+3. Steps to Implement:
+   - Define the function as `async` with `try-catch`.
+   - Use `tour.findByIdAndDelete(req.params.id)` to delete the document.
+   - This method requires the ID from `req.params.id`.
+   - There's no need to store the result in a variable since nothing is returned to the client.
+   - Common practice is to return no data for a DELETE operation.
+   - Return `204` status code (No Content) to indicate success.
+
+4. Test the Deletion:
+   - First, create a tour to test deletion.
+   - Example: Create a "Jonas tour" and save it.
+   - Use Postman to send a DELETE request with the tour's ID.
+   - A `204` status code is returned, confirming the deletion.
+   - Verify that the tour no longer exists by getting all tours.
+
+5. Learning Tip:
+   - If you didn’t figure it out yourself, that’s okay. The key is to practice looking at the documentation and experimenting.
+   - Familiarizing yourself with the documentation will help you a lot in your development process.
+
+6. Next Steps:
+   - We have implemented the basic CRUD operations (Create, Read, Update, Delete).
+   - The next step is to model the `Tour` data better, adding more details to each tour (e.g., location, description).
+
+=========================================================
+================ Modelling the Tours
+
+Mongoose Tour Schema – Data Structuring for a Tour API
+
+1. Basic Structure:
+   - Initially, the tour schema includes:
+     - Name, rating, and price.
+
+2. Goal:
+   - Make the tour documents more data-rich, similar to a production-ready API.
+   - We aim to add more fields like:
+     - Start location, rating average, quantity, images, start dates, guides, duration, max group size, difficulty, description, etc.
+
+3. New Fields for Tour Schema:
+   
+   1. Duration:
+      - Type: Number
+      - Required: True
+      - Custom Message: "A tour must have a duration."
+
+   2. Max Group Size:
+      - Type: Number
+      - Required: True
+      - Custom Message: "Tour must have a group size."
+
+   3. Difficulty:
+      - Type: String
+      - Validations for 'easy', 'medium', 'hard' will be added later.
+
+   4. Ratings:
+      - Ratings Average (Number, Default: 0)
+      - Ratings Quantity (Number, Default: 0)
+      - Not required, as these will be auto-calculated from reviews.
+
+   5. Price:
+      - Type: Number.
+   
+   6. Discount Price (Optional):
+      - Type: Number.
+   
+   7. Summary:
+      - Type: String
+      - Trim: True (Removes extra whitespace)
+      - Not required for the overview but will be used in the details page.
+
+   8. Description:
+      - Type: String
+      - Required: True
+      - Trim: True (Remove leading/trailing spaces)
+
+   9. Image Cover:
+      - Type: String (name of the image)
+      - Required: True (Image reference stored, not the image itself in the DB)
+
+   10. Images (Array of Strings):
+       - Type: Array of Strings.
+       - Multiple image references stored.
+
+   11. Created At:
+       - Type: Date
+       - Default: `Date.now()`
+
+   12. Start Dates (Array of Dates):
+       - Type: Array of Dates.
+       - Multiple start dates for the same tour.
+
+4. Important Notes:
+   - Trim for Strings: Automatically removes whitespace from the beginning and end of strings.
+   - Created At Field: Automatically sets the creation timestamp when the tour is added.
+   - Start Dates: Array of dates for a tour with different starting instances.
+   
+5. Testing the Schema:
+   - Use data from `tour-simple.json` file to create a POST request.
+   - Remove `id` field (no longer needed as it is auto-generated by Mongo).
+   - Required fields should now be part of the POST request, and optional ones can be added later.
+
+6. Error Handling:
+   - When submitting the POST request, an error message will be shown if the data doesn't match the schema (e.g., missing required fields).
+   - Debugging: Send the full error message for better clarity on what went wrong.
+
+7. Validation and Data Types:
+   - Each field type (Number, String, Date) has its own schema options (e.g., `required`, `default`, `trim`).
+   - Fields like `ratingsAverage` and `ratingsQuantity` will be auto-calculated from reviews, but initially, they will have default values (0).
+   - Other fields like `priceDiscount`, `createdAt`, and `imageCover` will have simple type definitions.
+
+8. Real-World Application:
+   - This schema can be used for any tour-related API with enhanced data, covering information about tours, prices, reviews, and availability.
+   - The `createdAt` field is particularly useful for tracking when a tour was created, and the `startDates` allow for flexibility in tour scheduling.
+
+9. Reference to Example Site (Natours):
+   - Example of a real-world API for tours: `Natours.dev`.
+   - The website includes tour data like difficulty, duration, price, location, rating average, reviews, images, and more.
+
+=========================================================
+================ Importing Development Data
+
+1. Objective: Create a script to import tour data from a JSON file into MongoDB.
+   - The script will run separately from the main application to import data once.
+
+2. Setting up the Script:
+   - Create a new file named `importDevData.js` inside the `data` folder.
+   - The script requires several dependencies:
+     - `mongoose` (for MongoDB interaction)
+     - `.env` package (for environment variables)
+     - `fs` (file system module to read JSON file)
+     - `tour` (Tour model to insert data)
+
+3. Dependencies:
+   - Start by copying the mongoose setup from `server.js` to avoid rewriting the same code.
+   - Remove express-related code since it's not needed for this script.
+   - Ensure `.env` is included to read environment variables for DB connection.
+   - Use the `fs` module to read the JSON file.
+   - Import the Tour model to insert data into the tours collection.
+
+4. Reading JSON File:
+   - Use `fs.readFileSync` to synchronously read the file.
+   - File path should be specified as `tours-simple.json` (or appropriate JSON file).
+   - Specify UTF-8 encoding.
+
+5. Importing Data:
+   - Define an async function `importData` to handle data import.
+   - Use `try-catch` block for error handling.
+   - Use `tour.create()` to insert multiple documents at once.
+     - Convert JSON string to a JavaScript array using `JSON.parse()` before passing it into `create()`.
+   - If successful, log "Data successfully loaded" to the console.
+
+6. Deleting Data:
+   - Create another function `deleteData` to remove all documents from the tours collection.
+   - Use `tour.deleteMany({})` to delete all documents in the collection.
+
+7. Command Line Arguments:
+   - Introduce command line arguments (`process.argv`) to control which function to run:
+     - `--import`: To run the import function.
+     - `--delete`: To run the delete function.
+   - Use `process.argv[2]` to check for the option passed via the command line.
+
+8. Running the Script:
+   - To run the script, use `node dev/data/importDevData.js --import` for importing data.
+   - Use `node dev/data/importDevData.js --delete` to delete all existing data.
+   - If data is successfully deleted, log "Data successfully deleted" to the console.
+
+9. Exit Script:
+   - After the operation completes, call `process.exit()` to exit the script.
+   - This ensures the script stops running after performing the necessary action.
+
+10. Error Handling:
+    - If there's an error while importing, handle it in the `catch` block and log the error.
+    - Ensure the process exits regardless of success or failure.
+
+11. Final Verification:
+    - Test the script by deleting all data first and then importing new data.
+    - If validation errors occur during import, check the data structure.
+    - For example, missing fields like `group size` may cause errors.
+
+12. Conclusion:
+    - After successful data import, data will be available in the database for further use.
+    - The script is a one-time setup to populate the database.
+
+
+=========================================================
+================ Making the API Better_ Filtering
+
+1. Introduction to Filtering:
+    - In this lecture, we will implement filtering for the API using query strings in Express.
+    - Query strings allow users to filter data by specifying field-value pairs.
+
+2. Understanding Query Strings:
+    - Query strings start with a question mark ? and contain key-value pairs like field=value.
+    - Example: duration=5&difficulty=easy.
+    - In Postman, you can add query strings directly in the Params tab, and Postman automatically appends them to the URL.
+
+3. Accessing Query String Data in Express:
+    - Express provides easy access to query string data through request.query.
+    - It returns an object with the query parameters (e.g., { duration: '5', difficulty: 'easy' }).
+
+4. Basic Filtering with Mongoose:
+    - Mongoose allows us to filter data from the database using:
+    - Filter Object : Model.find({ duration: 5, difficulty: 'easy' })
+    - Mongoose Query Methods: Model.where('duration').equals(5).where('difficulty').equals('easy')
+    - Both approaches achieve the same result
+
+5. Filtering with req.query:
+    - You can filter results dynamically based on the query string in the request.
+        e.g. Model.find(req.query)
+    - req.query contains all the key-value pairs from the query string.
+    - Filters applied through the query string are automatically handled by Mongoose.
+
+6. Excluding Special Fields (Pagination, Sort, Limit):
+    - Fields like page, sort, and limit should not be used as filters.
+    - To exclude these from the filter query:
+        - Create a shallow copy of req.query.
+        - Exclude page, sort, limit, and fields from the copy.
+        - Use the cleaned-up query object for filtering the data.
+        - Example of copying and excluding fields:
+            const queryObject = { ...req.query }; // shallow copy
+            const excludedFields = ['page', 'sort', 'limit', 'fields'];
+            excludedFields.forEach(field => delete queryObject[field]);
+
+7. Implementation:
+    - Step 1: Filter the data based on the query string.
+    - Step 2: Exclude any special fields that are not related to filtering.
+    - Step 3: Query the database using the filtered object.
+    - Example of querying after excluding special fields
+        Model.find(queryObject);
+
+8. Testing and Debugging:
+    - Use console.log to check both the original req.query and the filtered queryObject.
+    - Ensure that the filtering logic works and that the correct data is returned based on the query string.
+
+9. Chaining Queries in Mongoose:
+    - Mongoose supports query chaining for more complex queries:
+    - Example: Model.where('duration').equals(5).where('difficulty').equals('easy');
+
+10. Awaiting Query Results:
+    - Once the query is built, use await to execute it and get the results
+        const results = await Model.find(queryObject);
+
+11. Next Steps:
+    - After implementing filtering, the next steps will involve adding functionality for sorting, pagination, and limiting results.
+    - These features will be handled similarly by excluding certain fields from the query object before querying the database.
+
+=> Summary:
+    - We learned how to implement a simple filtering system in an API using query strings in Express.
+    - The key steps include accessing the query string via req.query, cleaning it up to remove special fields like page, sort, and limit, and then querying the database using Mongoose.
+    - This setup allows us to filter data dynamically based on user input and lays the foundation for adding more complex features like sorting and pagination later on.
+
+
+=========================================================
+================ Making the API Better_ Advanced Filtering
+
+- We're enhancing our filtering functionality to support more complex queries.
+- Currently, users can filter by setting one key equal to a value. We now want to allow the use of operators like:
+  - Greater than (gt)
+  - Greater than or equal to (gte)
+  - Less than (lt)
+  - Less than or equal to (lte)
+- For example, users should be able to filter by "duration greater than or equal to five" rather than just equality.
+- Let's first write out what the query should look like in MongoDB.
+
+Example:
+{
+  difficulty: "easy",
+  duration: { $gte: 5 }  // 'gte' is the operator for "greater than or equal to"
+}
+
+- In Postman, you can write the query string as:
+  `difficulty=easy&duration[$gte]=5`
+  This includes the operator as part of the query string.
+
+- Now, let's check what our query object looks like in Express. We can log `req.query` to the console.
+  - If there’s an error, don’t worry about it yet. We want to inspect the query object.
+  - The query object might look like this:
+    {
+      difficulty: "easy",
+      duration: { "$gte": "5" }
+    }
+- The issue is that the operators need to be converted to MongoDB’s operator format, which starts with a dollar sign `$`. 
+
+Solution:
+- Use the `replace()` function in JavaScript to convert operator names like `gte`, `gt`, `lte`, `lt` into MongoDB's format.
+- We will use a regular expression to match these operators and replace them with MongoDB operators that have a dollar sign in front.
+- The regular expression should match these operators exactly, so we use `\b` before and after the word to avoid partial matches. 
+- The final regular expression should be: `/\b(gte|gt|lte|lt)\b/g`
+
+Steps:
+1. Convert the query object to a string using `JSON.stringify(queryObject)`.
+2. Use `replace()` to match and replace operators.
+3. Save the result back into the query string.
+4. Parse the modified query string using `JSON.parse()`.
+
+- Example of code:
+```javascript
+let queryString = JSON.stringify(queryObject);
+queryString = queryString.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+let finalQueryObject = JSON.parse(queryString);
+
+Testing the query:
+    - If duration[$gte]=5, the query object would be
+        {
+        "difficulty": "easy",
+        "duration": { "$gte": 5 }
+        }
+    - The output would return documents that match the filter, such as duration 5 or 9
+
+- We also added a filter for price using the < operator (less than) to exclude results with prices above a certain threshold.
+    Example filter:
+        {
+        difficulty: "easy",
+        duration: { "$gte": 5 },
+        price: { "$lt": 1500 }
+        }
+
+    - Once applied, the price filter removed the document with a price greater than 1500.
+    - This advanced filtering allows the API to support greater flexibility and provide more complex querying options for users.
+
+- Real-World Consideration:
+    - In a production scenario, it’s important to document the API thoroughly, specifying all available query parameters and how they work (including operators like gte, lt, etc.).
+    - If you're building an API for others to use, documentation is crucial to ensure the users understand how to filter, sort, and query data
+
+=========================================================
+
+- Sorting Results Based on a Field (Price)
+    - Users can sort results based on a field passed via query string.
+    - Example: Sort by price.
+    - Prices are not initially in order, so sorting is needed.
+    - Query: `req.query.sort`
+    - Mongoose sorts based on the field provided in `req.query.sort`.
+
+- Modifying the Query Object
+    - Change the query object from constant to variable: `let query = tour.find();`.
+    - If there's a `sort` field in the query string, use `query.sort(req.query.sort)` to sort results.
+
+- Testing Sorting
+    - With `req.query.sort = 'price'`, the results will be sorted by ascending price (lowest to highest).
+    - Example results: 397, 497, 997, 1197, 1497, 1997, 2997.
+    - Sorting is working, as results are now in order.
+
+- Sorting in Descending Order
+    - Use `-price` in `req.query.sort` to sort by descending price (highest to lowest).
+    - Example: Results now start with the highest price.
+
+- Handling Ties in Sorting
+    - Results with the same price need secondary sorting.
+    - Example: If two products have the same price, sort by another field (e.g., rating).
+    - Mongoose allows sorting by multiple fields: `query.sort('price ratingAverage')`.
+
+- Syntax for Multiple Sort Fields
+    - Add multiple fields by separating them with commas: `'price,ratingAverage'`.
+    - Replace the comma with a space in `query.sort()`.
+
+- Implementation of Multiple Sorting Fields
+    - Split the `req.query.sort` value by commas to handle multiple sort fields.
+    - Example: `req.query.sort = 'price,ratingAverage'` → split into an array `['price', 'ratingAverage']`.
+    - Use `join(' ')` to convert the array back into a string for Mongoose sorting.
+    - Console log the sort fields to verify the sort order.
+
+- Testing Sorting with Ratings
+    - Example: Update the ratings of products and test sorting by both price and ratings.
+    - Test cases: Sorting by price, then by rating average.
+    - Use `-ratingAverage` for descending order on ratings.
+
+- Setting Default Sorting
+    - If no sort field is provided in the query string, default sorting can be applied.
+    - Sort by `createdAt` in descending order by default.
+    - Code example: `query.sort('-createdAt')`.
+
+- Final Check
+    - With `req.query.sort` set to `'price,ratingAverage'`, results will be sorted by price first, then by rating.
+    - If no sorting field is specified, results will be sorted by `createdAt` in descending order (newest first).
+
+- Removing Console Logs
+    - Remove `console.log` statements used for debugging.
+    - Clean up the code before final deployment.
+
+
+=========================================================
+================ Making the API Better_ Limiting Fields
+
+1. Introduction to Field Limiting
+    - Allows clients to choose which fields they want in the response.
+    - Optimizes bandwidth by sending only necessary data.
+    - Especially useful for data-heavy datasets.
+
+2. Postman Example
+    - Specify a field called fields with the names of desired fields.
+    - Example: fields=name,duration,difficulty,price
+    - Clients can request only certain fields (e.g., name, duration, difficulty, price).
+
+3. Implementation Approach
+    - Using req.query.fields:
+        - MongoDB expects a string with field names separated by spaces.
+        - Create a query with query.select() that includes only the requested fields.
+
+4. Example of Field Limiting
+    - Request fields: name, duration, price.
+    - The query will select only these fields and return only those in the response.
+
+5. Creating the Query
+    - req.query.fields can be split by commas and joined with spaces to produce a string in the correct format.
+    - Example: name, duration, price becomes name duration price in MongoDB.
+
+6. Default Field Limiting
+    - Add a default behavior in case no fields are specified.
+    - Exclude the internal MongoDB field __v (by prefixing with -).
+        - MongoDB uses __v internally but it's not needed for the client.
+
+7. Example of Field Exclusion
+    - Use - to exclude specific fields from the response (e.g., exclude __v).
+    - Query string example: -__v.
+
+8. Testing Field Limiting
+    - Verify results by testing with different field inclusion/exclusion combinations.
+    - Example:
+        - Include: name, duration, difficulty, price.
+        - Exclude: -__v, -name, -duration.
+
+9. Excluding Fields from the Schema
+    - Can permanently hide sensitive or irrelevant fields.
+    - Example: Hide createdAt field from the schema to prevent it from being sent to clients.
+    - Schema Change:
+        - In the Tour model, set createdAt's select property to false to exclude it from the response.
+        - Result: When querying the tours, createdAt will no longer appear.
+
+=========================================================
+================ Making the API Better_ Pagination
+
+- What is Pagination?
+    - Important for APIs that return large sets of data.
+    - Allows users to request specific pages instead of fetching all data.
+    - Example: If there are 1000 documents and we show 100 per page, then we have 10 pages of data.
+
+- Query Parameters:
+    - To implement pagination, use query parameters like page and limit.
+    - Example: page=2&limit=10.
+    - The limit is the number of results per page (e.g., 10 results per page).
+    - The page is the page number requested (e.g., page 2).
+
+- Skip & Limit Methods in Mongoose:
+    - skip(): Skips a number of documents.
+    - limit(): Limits the number of documents returned.
+    - Example:
+        Tour.find()
+        .skip((page - 1) * limit)
+        .limit(limit)
+
+- How to Calculate Skip Value:
+    - If page = 2 and limit = 10, then results 11-20 will be displayed on page 2.
+    - To display page 2:
+        - Skip 10 results before showing page 2.
+        - For page 3, skip 20 results.
+        - The formula for calculating skip is:
+            - (page - 1) * limit.
+
+- Handling Default Values:
+    - Default Page and Limit: Set default values in case they are not specified by the user.
+    - Example: Default page = 1 and default limit = 100.
+    - Convert query string values to numbers using *1 or parseInt().
+
+- Page Validation:
+    - Need to check if the page requested exists.
+    - Use countDocuments() to get the total number of documents in the collection.
+    - If skip is greater than the number of documents, throw an error.
+    - Return a 404 error if the page does not exist.
+
+- Example for Skip Calculation:
+    - Page 1: Results 1-10.
+    - Page 2: Results 11-20.
+    - For page 3, we skip 20 results.
+    - Formula: (page - 1) * limit.
+
+- Handling Non-Existent Pages:
+    - If the user requests a page that exceeds the number of available pages, return a 404 Not Found error.
+    - Example:
+        - If there are 9 items and a user requests page 4, there are no results, so we return an error.
+
+- Mongoose Query Methods:
+    - skip(): Skips a certain number of documents.
+    - limit(): Limits the number of documents returned.
+    - countDocuments(): Returns the total count of documents in the collection.
+
+- Final Query Example:
+    - Query will include skip, limit, and possibly sort, select methods.
+    - These methods can be chained together to build the final query.
+
+- Error Handling:
+    - If the page doesn't exist, throw an error and return a 404 status.
+
+- Testing Pagination:
+    - Try different values for page and limit.
+    - For example, if the limit is 3, test pages 1, 2, 3, and check the results.
+    - If page exceeds available results, the API should return 0 results and a 404 error.
+
+- Next Step:
+    - More features to add in the next lecture, not necessarily using query methods.
+
+
+=========================================================
+================ Making the API Better_ Aliasing
+API Feature: Alias Route for Popular Requests
+
+- Concept: Provide an alias route for requests that are often used, making them simpler for users to memorize and access.
+
+- Example Use Case: Create a route for the "five best cheap tours."
+  - Query for Five Best Cheap Tours:
+    - Limit to 5 results
+    - Sort by ratings (descending)
+    - If ratings are tied, sort by the lowest price
+
+- Request Example:
+  - A regular route request with filters would look complex, but we want a simple alias route.
+  - Alias Route: /top-5-cheap
+  
+- Solution: 
+  - We will create a simple alias route for easy access.
+  - Implement the route and prefill the query parameters with desired filters.
+
+Step-by-Step Implementation:
+
+1. Route Setup:  
+   - In tourRouter.js, create a new route:  
+     - .route("/top-5-cheap")
+   - Method: .get() for the GET request.
+
+2. Sorting:
+   - Sort tours by:
+     - ratingsAverage in descending order
+     - If ratings are tied, sort by price in ascending order.
+   
+3. Tour Selection:
+   - Set limit to 5 for the top 5 results.
+
+4. Middleware:
+   - Purpose: Manipulate the query object before it reaches the controller.
+     - Create a middleware function to prefill the query string with:
+       - limit: 5
+       - sort: ratingsAverage and price
+       - fields: name, price, ratings average, summary, difficulty
+     - This prefill ensures that the user doesn't have to include these parameters manually.
+
+5. Using Middleware in Route:
+   - Create middleware `aliasTopTours` in the controller (tourController).
+   - Example:
+     ```
+     exports.aliasTopTours = (req, res, next) => {
+       req.query.limit = '5';
+       req.query.sort = '-ratingsAverage,price';
+       req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+       next();
+     };
+     ```
+   - Call the `aliasTopTours` middleware before the handler for the route:
+     ```
+     router.route('/top-5-cheap').get(aliasTopTours, getAllTours);
+     ```
+
+6. Final Implementation:
+   - The alias route `/top-5-cheap` works by manipulating the request query before passing it to the handler.
+   - Result: When users visit `/top-5-cheap`, they get the top 5 cheap tours sorted by rating and price.
+
+- Recap:
+  - Alias routes are a nice way to simplify common requests for users.
+  - Middlewares are powerful for modifying request data before it reaches the final handler.
+  - This approach reduces the need for complex query parameters in the request URL.
+
+=========================================================
+================ Refactoring API Features
+Refactoring API Features for Modularity and Reusability
+
+- Purpose: To refactor API features for cleaner, more modular, and reusable code.
+- The goal is to create a class to encapsulate API features, making it reusable across different resources like users and reviews.
+
+Steps:
+1. Create Class (APIFeatures):
+   - Define a class `APIFeatures`.
+   - Add a constructor that accepts two parameters:
+     - `query` (mongoose query)
+     - `queryString` (request query parameters from Express)
+
+2. Add Methods to Class:
+   - Each method represents a specific API feature like filtering, sorting, limiting fields, and pagination.
+   - The query is manipulated inside each method.
+
+3. Filter Method:
+   - Move filtering code inside the `filter` method.
+   - Replace `req.query` with `this.queryString`.
+   - Use `this.query.find()` instead of querying directly for the resource.
+   - Return `this` to allow method chaining.
+
+4. Sort Method:
+   - Move sorting logic to the `sort` method.
+   - Replace `req.query` with `this.queryString`.
+   - Use `this.query` to apply sorting.
+   - Ensure method chaining by returning `this`.
+
+5. Limit Fields Method:
+   - Move the field limiting logic to the `limitFields` method.
+   - Replace `req.query` with `this.queryString`.
+   - Use `this.query` to apply the limit.
+   - Return `this` for chaining.
+
+6. Pagination Method:
+   - Move pagination logic to the `paginate` method.
+   - Replace `req.query` with `this.queryString`.
+   - Use `this.query` for pagination logic.
+   - Return `this` to allow chaining.
+
+7. Chain Methods:
+   - Each method manipulates `this.query`.
+   - Methods should return `this` to allow chaining.
+   - By the end of the chain, `this.query` will hold the final query.
+
+8. Using the Class:
+   - Create an instance of the `APIFeatures` class:
+     - Pass `Tour.find()` as the query.
+     - Pass `req.query` as the query string.
+   - Call methods on the instance:
+     - `.filter()`
+     - `.sort()`
+     - `.limitFields()`
+     - `.paginate()`
+   - The methods manipulate `this.query`, and the final query is executed with `await`.
+
+9. Testing:
+   - Test the refactored code with Postman to ensure all features (filtering, sorting, limiting, pagination) still work.
+   - Test routes like `Top-5-cheap` to verify functionality.
+   - Refactor the route handler to use the class, making it cleaner and more readable.
+
+10. Export Class:
+   - Move the `APIFeatures` class to a separate file `APIFeatures.js` inside a `Utils` folder.
+   - Export the class with `module.exports`.
+   - In the main file, import the class using `require()`.
+
+11. Final Thoughts:
+   - By refactoring to use a class and methods, the code is cleaner and more modular.
+   - It's easier to reuse this functionality across different resources.
+   - This improves maintainability and scalability of the codebase.
+
+=========================================================
+================ Aggregation Pipeline_ Matching and Grouping
+
+1. Aggregation Pipeline:
+    - Allows you to process documents step-by-step in a sequence of stages.
+    - Stages can include operations like filtering, grouping, calculating averages, etc.
+
+2. Creating the getTourStats Function:
+    - You're starting by defining a new async function getTourStats to calculate statistics on tours.
+    - Using tour.aggregate() to access the aggregation pipeline.
+
+3. Stages in Aggregation:
+    - $match: Filters documents based on criteria. For example, selecting tours with an average rating of >= 4.5.
+    - $group: Groups documents based on a specific field (like difficulty) and applies aggregation operations such as calculating averages or totals.
+    - Mathematical Operators: You’re using $avg, $min, and $max to calculate averages, minimum, and maximum values for ratings and prices.
+
+4. Additional Stats:
+    - Adding fields to calculate:
+        - Total number of ratings using $sum on the ratingsQuantity.
+        - Total number of tours by adding 1 for each document.
+
+5. Refining the Grouping:
+    - The grouping is first done without any field (i.e., using null for _id), but later you apply grouping by difficulty (easy, medium, hard) to get insights per difficulty level.
+
+Code Breakdown:
+
+// getTourStats function
+const getTourStats = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      {
+        $match: {
+          ratingsAverage: { $gte: 4.5 }
+        }
+      },
+      {
+        $group: {
+          _id: null, // Grouping all tours together for overall stats
+          averageRating: { $avg: "$ratingsAverage" },
+          averagePrice: { $avg: "$price" },
+          minPrice: { $min: "$price" },
+          maxPrice: { $max: "$price" },
+          numRatings: { $sum: "$ratingsQuantity" },
+          numTours: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        stats
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Example route to call the function
+router.route('/tour-stats').get(tourController.getTourStats);
+
+
+- Testing the Pipeline:
+    - The aggregation pipeline provides the calculated statistics when tested. You’ll get the average ratings, prices, and other statistics for tours.
+    - After fixing an issue where you didn’t await the aggregation result, you test it and confirm the correctness of the data returned.
+
+- Extending to Grouping by Field:
+    - Later, you're grouping the tours by their difficulty field to get statistics for each group:
+        {
+        $group: {
+            _id: "$difficulty", // Grouping by difficulty
+            averageRating: { $avg: "$ratingsAverage" },
+            averagePrice: { $avg: "$price" },
+            numRatings: { $sum: "$ratingsQuantity" },
+            numTours: { $sum: 1 }
+        }
+        }
+
+- Insights:
+    - The statistics returned allow you to analyze the tours based on their difficulty levels and other parameters like price and ratings.
+
+- This approach is incredibly powerful for extracting and analyzing insights from your data. You've set up an excellent foundation for using MongoDB's aggregation framework to build more complex queries and reports.
+
+=========================================================
+================ Aggregation Pipeline_ Unwinding and Projecting
+Aggregation Pipeline for Business Problem: Calculating Busiest Month
+
+- Objective: Create a function to calculate the busiest month of a given year by counting how many tours start in each month.
+- Purpose: Helps Nature's Company prepare for tours, hire guides, and buy equipment accordingly.
+  
+Function Setup
+
+1. Define the Function: getMonthlyPlan  
+    - Async function using try-catch block.
+    - Receive the year parameter from the URL.
+
+2. Create Route:
+    - /monthly-plan/:year route using URL parameter for the year.
+
+3. Initial Setup:
+    - Extract year from req.params.year and convert it to a number.
+    - Initialize plan variable, awaiting the result from tour.aggregate().
+
+4. Aggregation Pipeline Structure:
+    - Start with an empty aggregation pipeline and modify it step-by-step.
+  
+---
+
+1. Unwind Stage: Flattening Array of Dates
+
+- Problem: Each tour has an array of start dates. We need to count each tour start date separately.
+- Solution: Use the unwind stage to deconstruct the array and output one document for each start date.
+    - Unwind Code:  
+      { $unwind: "$startDates" }
+    - Result: Each tour will be represented by a separate document for each date.
+
+---
+
+2. Matching Dates: Filter Tours by Year
+
+- Problem: We need tours that fall within the specified year.
+- Solution: Use the match stage to filter documents.
+    - Code for Date Range:  
+      {
+        $match: {
+          "startDates": {
+            $gte: new Date(`${year}-01-01`),
+            $lt: new Date(`${year + 1}-01-01`)
+          }
+        }
+      }
+    - This ensures we're only considering tours from January 1st of the specified year to December 31st of that year.
+
+---
+
+3. Grouping Data: Group by Month
+
+- Problem: We need to group the results by the month of the start date.
+- Solution: Use the group stage to aggregate data.
+    - Use the $month operator to extract the month from the start date.
+    - Code for Grouping:  
+      {
+        $group: {
+          _id: { $month: "$startDates" }, // Group by month
+          numOfTours: { $sum: 1 }, // Count number of tours
+          tours: { $push: "$name" } // Include tour names
+        }
+      }
+
+---
+
+4. Formatting the Result: Add and Project Fields
+
+1. Add Field Stage: 
+    - Add a new field month with the same value as _id (month number).
+    - Code for Adding Month:  
+      { $addFields: { month: "$_id" } }
+
+2. Project Stage: 
+    - Remove unnecessary fields (_id), showing only month, numOfTours, and tours.
+    - Code for Projecting:  
+      { 
+        $project: {
+          _id: 0,
+          month: 1,
+          numOfTours: 1,
+          tours: 1
+        }
+      }
+
+---
+
+5. Sorting: Sort by Number of Tours
+
+- Problem: We want to display months sorted by the number of tours.
+- Solution: Use the sort stage to arrange the results in descending order based on numOfTours.
+    - Code for Sorting:  
+      { $sort: { numOfTours: -1 } }
+
+---
+
+Final Output
+
+- The final result will display each month of the year with the number of tours starting in that month, sorted by the highest number of tours.
+
+=========================================================
+================ Virtual Properties
+
+Mongoose Virtual Properties
+
+- Virtual properties are fields defined on a schema but not saved to the database.
+- Purpose: Save space in the database for fields that can be derived from other data.
+- Example: Convert miles to kilometers. Instead of saving both, save only one and derive the other.
+
+---
+
+Virtual Property: Tour Duration in Weeks
+
+1. Define the virtual property on the schema.
+   - Use `tourSchema.virtual()` to define a virtual field.
+   - Name it, e.g., `durationWeeks`.
+
+2. Define the getter method:
+   - This method calculates the virtual value when the data is accessed.
+   - Syntax: `tourSchema.virtual('durationWeeks').get()`
+
+3. Calculate the duration in weeks:
+   - Formula: `this.duration / 7` (days divided by 7)
+   - Example: If the tour duration is 7 days, it equals 1 week.
+
+---
+
+Regular Function for Getter
+
+1. Use a regular function instead of an arrow function.
+2. Reason: Arrow functions don't have their own `this` keyword, which is needed here.
+   - `this` will point to the current document in the schema.
+
+---
+
+Making Virtual Property Available in Output
+
+1. By default, virtuals aren't included in the output.
+2. Add options in the schema to include virtuals:
+   - `tourSchema.set('toJSON', { virtuals: true })`
+   - `tourSchema.set('toObject', { virtuals: true })`
+   - This ensures virtual properties show up when the data is converted to JSON or an object.
+
+---
+
+Checking the Output
+
+1. After adding the above settings, virtual properties like `durationWeeks` will be included in the output.
+2. Example Output:
+   - For a tour with 5 days, `durationWeeks` will be 0.71.
+   - For a tour with 7 days, `durationWeeks` will be 1.
+
+---
+
+Limitations of Virtual Properties
+
+1. Virtual properties cannot be used in queries.
+   - Example: `tour.find({ durationWeeks: 1 })` will not work.
+2. Virtuals are not part of the database. They are derived values based on other fields.
+3. Avoid doing conversions in controllers (e.g., calculating duration in weeks) as it violates the principle of separating business logic and application logic.
+
+---
+
+Best Practice: Fat Models and Thin Controllers
+
+1. Business logic should reside in the model, not in the controller.
+2. Virtual properties help achieve this by allowing calculations to happen in the model.
+3. Keep controllers as thin as possible to focus on handling requests and responses.
+
+=========================================================
+================ Document Middleware
+
+- Mongoose has middleware just like Express.
+- Middleware in Mongoose is used to perform actions between events (before or after certain operations).
+- "Pre" and "Post" middleware are called "hooks" because we can define functions to run before or after specific events.
+
+Types of Mongoose Middleware:
+1. Document Middleware
+2. Query Middleware
+3. Aggregate Middleware
+4. Model Middleware
+
+- This section covers Document Middleware which acts on the currently processed document.
+- You can use `pre` middleware to run code before an event (e.g., before saving a document to the database).
+- You can use `post` middleware to run code after an event (e.g., after a document has been saved).
+
+Key Notes on Document Middleware:
+- `tourSchema.pre` is used for pre-save middleware (runs before saving a document).
+- `tourSchema.post` is used for post-save middleware (runs after saving a document).
+- The `this` keyword in pre middleware refers to the current document.
+- The `next` function is used to move to the next middleware, just like in Express.
+
+Pre Middleware Example (Pre-save Hook):
+- We define a `pre` middleware to generate a slug for the document.
+- `this.slug = slugify(this.name, { lower: true })` creates a slug based on the tour name before saving.
+- Always use `next()` to ensure proper flow in the middleware stack.
+
+Important Notes:
+- Document middleware only works for the `save` and `create` methods.
+- The `insertMany` method does NOT trigger the pre-save middleware.
+- To apply the changes to the document, add the new property (e.g., `slug`) to the schema.
+
+Post Middleware Example (Post-save Hook):
+- `tourSchema.post('save', function(doc, next) { ... })` runs after the document has been saved to the database.
+- The `doc` parameter in the `post` middleware represents the saved document.
+- You can use `post` middleware to do something after saving the document (e.g., log the saved document).
+
+Multiple Middlewares for the Same Hook:
+- Mongoose allows multiple pre or post middleware functions for the same event (e.g., multiple pre-save functions).
+- Middleware can affect the flow of operations, so always ensure `next()` is called unless you want to halt the operation.
+
+Error Handling in Middleware:
+- If you forget to call `next()` in a pre middleware function, the operation will be stuck and won't finish.
+- Always remember to call `next()` to move to the next middleware or complete the operation.
+
+Important Considerations:
+- Document middleware (pre or post) does NOT apply to `findByIdAndUpdate`, `update`, or other queries like `findOneAndUpdate`.
+- For complex operations, you may need to use workarounds for this limitation.
+
+In Summary:
+- Document middleware allows manipulating a document before or after saving.
+- Pre middleware runs before the document is saved, while post middleware runs afterward.
+- Use `next()` to proceed with the middleware flow.
+
+=========================================================
+================ Query Middleware
+
+Mongoose Query Middleware
+
+- Definition: Query middleware allows functions to run before or after certain queries are executed.
+
+1. Creating a Pre-Find Hook
+- What is it? A hook runs before a find query.
+  
+tourSchema.pre('find', function(next) {
+  // Middleware logic
+  next();
+});
+
+- Important: 
+  - `this` in query middleware refers to the query, not the document.
+  - `next()` should be called at the end to continue the query.
+
+2. Use Case
+- We don't want "secret" tours to show up in public queries. 
+- We add a `secretTour` field (Boolean) to the schema to identify secret tours.
+
+secretTour: { type: Boolean, default: false }
+
+3. Testing Query Middleware
+- Example Secret Tour: 
+
+const secretTour = {
+  name: 'Super Secret Tour',
+  secretTour: true
+};
+
+- Test Query: Only fetch tours where `secretTour` is not true.
+  
+Tour.find({ secretTour: { $ne: true } })
+  .then(result => console.log(result));
+
+4. Difference Between `find` and `findById`
+- The `find` query works, but `findById` does not automatically use the same middleware.
+- Use regular expressions to apply middleware to both `find` and `findById`.
+
+tourSchema.pre(/^find/, function(next) {
+  // This applies to all queries starting with "find"
+  next();
+});
+
+5. Post Middleware for Query
+- Post middleware runs after the query has executed.
+
+tourSchema.post(/^find/, function(docs, next) {
+  console.log('Documents returned:', docs);
+  next();
+});
+
+6. Measuring Query Time
+- Add a start time before the query executes and calculate the time taken in the post middleware.
+
+tourSchema.pre('find', function(next) {
+  this.start = Date.now(); // Save current time
+  next();
+});
+
+tourSchema.post('find', function(docs, next) {
+  console.log(`Query took ${Date.now() - this.start} milliseconds`);
+  next();
+});
+
+7. Conclusion
+- Query middleware is useful for filtering, transforming, or logging query data before or after execution.
+- Regular expressions help apply middleware to multiple query methods (e.g., `find`, `findById`).
+
+=========================================================
+================ Aggregation Middleware
+
+Aggregation Middleware Notes
+
+- Aggregation middleware allows us to add hooks before or after an aggregation happens.
+- In our previous example, we hid secret tours from queries, but aggregation still included them.
+  
+Example Scenario:
+- We performed an aggregation (get tour stats) and saw 11 tours, but we only wanted 10 (excluding the secret tour).
+- The solution is to exclude secret tours from the aggregation right at the model level.
+
+Steps to Implement Aggregation Middleware:
+1. Add Pre Aggregation Middleware
+   - Use `tourSchema.pre()` to add middleware before an aggregation is executed.
+   - Use the `aggregate` hook.
+
+```javascript
+tourSchema.pre('aggregate', function(next) {
+  // Middleware logic
+  next();
+});
+
+
+Here's how you can format the notes for aggregation middleware in a text editor (TXT):
+
+csharp
+Copy
+Edit
+Aggregation Middleware Notes
+
+- Aggregation middleware allows us to add hooks before or after an aggregation happens.
+- In our previous example, we hid secret tours from queries, but aggregation still included them.
+  
+Example Scenario:
+- We performed an aggregation (get tour stats) and saw 11 tours, but we only wanted 10 (excluding the secret tour).
+- The solution is to exclude secret tours from the aggregation right at the model level.
+
+Steps to Implement Aggregation Middleware:
+1. Add Pre Aggregation Middleware
+   - Use `tourSchema.pre()` to add middleware before an aggregation is executed.
+   - Use the `aggregate` hook.
+
+```javascript
+tourSchema.pre('aggregate', function(next) {
+  // Middleware logic
+  next();
+});
+
+2. Understanding .this in Aggregation Middleware
+    - In aggregation middleware, this points to the current aggregation object.
+
+3. Inspect Aggregation Object
+    - To see the aggregation object, log this.pipeline.
+    - This shows the pipeline array, which contains the stages (e.g., $match, $group, etc.).
+
+4. Modify the Aggregation Pipeline
+    - To exclude secret tours, add a $match stage at the beginning of the pipeline using unshift().
+        this.pipeline.unshift({
+        $match: { secretTour: { $ne: true } }
+        });
+    - This removes all documents where secretTour is true.
+
+5. Testing the Results
+    - After modifying the pipeline, run the aggregation and check the result.
+    - For example, if there are 11 tours, it should now exclude the secret tour and return 10 tours.
+
+6. Confirmation
+    - Verify that the secret tour is excluded from the results by confirming that only non-secret tours are returned.
+
+7. Multiple Match Stages
+    - You can add as many $match stages as needed in the aggregation pipeline. These will all be applied in the order they appear in the array.
+
+8. Conclusion
+    - Aggregation middleware allows for pre-aggregation modifications, such as excluding certain documents from the aggregation.
+    - You don't need post middleware for this type of change.
+    - Aggregation middleware helps ensure code reusability and avoids repeating the exclusion logic across multiple aggregations.
+
+=> Additional Notes:
+    - Instance Methods: Later, we will explore instance methods, which are available on every document after being queried.
+    - Validation: Next section will cover validation in Mongoose models
+
+=========================================================
+================ Data Validation_ Built-In Validators
+
+Mongoose Data Validation Notes
+
+- Validation Definition:
+  - Validation checks if entered values are in the correct format for each field in the schema and ensures all required fields have values.
+  - Validation checks for format correctness (e.g., string length, number range).
+  
+- Sanitization vs. Validation:
+  - Sanitization ensures input is clean (e.g., no malicious code), whereas validation checks if data is correct (e.g., proper format, required fields).
+  - Sanitization is a crucial step in security (we’ll focus on this in the security section).
+
+- Where to Perform Validation:
+  - Mongoose allows validation to be done at the model level, following the "fat model, thin controller" philosophy.
+  - Validation logic can be added directly in the model schema.
+
+- Built-In Validators in Mongoose:
+  1. Required Validator:
+     - `required` ensures that a field must have a value.
+     - Available for all data types (e.g., strings, numbers, booleans).
+  
+  2. String Validators:
+     - Max Length: 
+       - Ensures the string length doesn't exceed a specified maximum.
+       - Example: `maxLength: 40` (Tour name must be ≤ 40 characters).
+     - Min Length: 
+       - Ensures the string length is at least a specified minimum.
+       - Example: `minLength: 10` (Tour name must be ≥ 10 characters).
+  
+  3. Number Validators:
+     - Min: 
+       - Ensures a number is not smaller than a specified minimum.
+       - Example: `min: 1` (Rating must be ≥ 1).
+     - Max: 
+       - Ensures a number does not exceed a specified maximum.
+       - Example: `max: 5` (Rating must be ≤ 5).
+
+  4. Enum Validator:
+     - Limits the field values to a specific set of acceptable values.
+     - Example: `enum: ['easy', 'medium', 'difficult']` (Valid difficulty values).
+     - Works for strings only, not numbers.
+  
+- Run Validators on Update:
+  - To run validation during an update, the `runValidators: true` option must be used.
+  - If `runValidators` is set to `false`, the update will ignore validation.
+  
+- Custom Validators:
+  - Mongoose allows the creation of custom validation logic.
+  - This feature will be covered in a later section.
+
+For a complete list of validators and options, refer to Mongoose documentation.
+
+=========================================================
+================ Data Validation_ Custom Validators
+
+Custom Validators in Mongoose
+
+- Sometimes, the built-in validators are not enough for our use cases.
+- In such cases, we can create our own **custom validators**.
+- A custom validator is essentially a **function** that should return either `true` or `false`.
+- If the function returns `false`, it means there's a validation error. If it returns `true`, the validation passes.
+
+Example: Custom Validator for Price Discount
+- We want to validate if the **price discount** is lower than the **price** itself.
+- This cannot be done with built-in validators, so we create our own custom validator.
+
+Steps to create a custom validator:
+1. Define the type (e.g., `Number` for price discount).
+2. Use the `validate` property in the schema to specify the custom validation function.
+3. The function should have access to the `this` variable (which points to the current document), so we use a **normal function** (not an arrow function).
+4. The function receives the input value (`val`) and checks if the value is less than `this.price`.
+
+Validator logic:
+- If `val < this.price`, return `true` (validation passes).
+- If `val >= this.price`, return `false` (validation fails).
+  - Example: Price discount `100` and price `200` → no error (`100 < 200`).
+  - Example: Price discount `250` and price `200` → error (`250 >= 200`).
+
+Adding Custom Error Message:
+- We can also specify a custom error message for the validator.
+- To do this, set the `message` property within the `validate` object.
+  - Example message: `"Discount price should be below the regular price."`
+- You can also reference the input value in the error message using `{VALUE}`.
+  - Example: `"Discount price should be below the regular price (your input: {VALUE})."`
+
+Important Caveat:
+- **Validator with `this`** works only when creating a **new document**.
+- During an **update**, the `this` keyword will not refer to the current document.
+- If you need a validator that doesn't rely on `this`, you can write a function that validates based on other logic (e.g., comparing values).
+
+Other Considerations:
+- If you are working with `update`, the **`this` keyword** won't work as expected.
+- There are ways to work around this, but it's often more complicated and not worth pursuing.
+
+Using External Validator Libraries:
+- You can also use third-party libraries for validation.
+- One popular library is **validator** (npm package).
+- The `validator` library provides several built-in validators (e.g., `isAlpha`, `isEmail`, `isURL`).
+- You can easily integrate these external validators into your Mongoose schema.
+
+Example using `validator`:
+1. Install the validator library:
+   - `npm install validator`
+2. Import the library and use it within the schema.
+   - Example: Using `isAlpha` to check if a tour name contains only letters.
+   - Example: You can also add custom error messages with the validator function.
+
+Key Points:
+- Custom validators are useful when you need more complex logic beyond the built-in options.
+- You can use Mongoose's built-in `validate` property to define a custom validation function.
+- Always remember that the `this` keyword in Mongoose validators works during **document creation** but not updates.
+- External libraries like **validator** can be used to simplify some validation tasks, but Mongoose already provides many common validators.
+
+Takeaways:
+- Custom validators let you define more specific validation logic.
+- Use the `validate` property with a function to implement custom logic.
+- Use external libraries like `validator` for simple string validation tasks.
+
+
+
+
+
+
+
