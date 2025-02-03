@@ -1,0 +1,550 @@
+=============================================================
+============== What is MongoDB
+MongoDB Overview:
+
+- MongoDB is a NoSQL database, meaning "Not Only SQL" or "No Sequel."
+- Unlike traditional relational databases (RDBMS), MongoDB is document-based, storing data in a flexible, JSON-like format.
+
+Key Concepts:
+1. Database: MongoDB stores data in databases.
+2. Collection: A database can contain multiple collections (similar to tables in relational databases).
+3. Document: A collection contains documents (like rows in relational databases).
+   - Documents are structured like JSON data.
+   - Example: A blog post, user, or review could be represented as a document.
+4. Flexibility: MongoDB documents don’t need a predefined schema, allowing each document to have different fields and data types.
+
+MongoDB Features:
+1. Document Storage: Data is stored in documents (key-value pairs), similar to JSON.
+2. Scalability: MongoDB is built for horizontal scaling, making it easy to distribute data across multiple machines as your app grows.
+3. Performance: MongoDB is highly performant, with features like:
+   - Embedded data models
+   - Indexing
+   - Sharding (distributing data across servers)
+   - Native duplication
+4. Open Source: MongoDB is free and open-source, published under the SSPL license.
+
+Comparing MongoDB to Relational Databases:
+- In relational databases, data is stored in tables with rows and columns. In MongoDB, data is stored as flexible documents.
+- BSON vs. JSON: MongoDB uses BSON (Binary JSON), a format similar to JSON but with data types (e.g., string, number, boolean, etc.).
+- Arrays in Fields: MongoDB allows multiple values in a single field (e.g., an array), which is not supported in relational databases without workarounds.
+
+Embedded Documents:
+- MongoDB allows embedding related data inside documents, known as "de-normalization."
+- Example: A blog post document can include comments as embedded objects (instead of referencing another table like in relational databases).
+- Benefit: It can improve performance by retrieving all data at once.
+
+Relational Databases vs MongoDB:
+- Relational Databases: Normalize data, creating separate tables for related data (e.g., comments in a blog post would be in a separate table).
+- MongoDB: Embeds related data directly in the document, improving performance in certain scenarios.
+
+Additional Notes:
+- BSON Documents:
+   - Maximum size per document: 16MB (might increase in the future).
+   - Each document has a unique ID, automatically generated using an ObjectID.
+
+
+=============================================================
+============== Installing MongoDB on macOS
+
+- This lecture is about installing MongoDB on macOS. 
+- If you're using Windows, skip this video and move on to the next one, as installation is different.
+- Open your browser and go to MongoDB.com.
+- Navigate to "Products" > "MongoDB Server."
+- In the MongoDB download center, select the MongoDB Community Server and the current release.
+- macOS should be automatically selected as the OS, and the only package option will be "macOS."
+- Hit "Download" and wait for the download to complete.
+- While downloading, the site will mention MongoDB Atlas, which is Mongo's cloud database service. 
+- MongoDB Atlas will be used later in the course to run our database in the cloud.
+- The downloaded file contains executable files, which need to be copied into a special binary folder on the system.
+- Open Terminal to copy files with `sudo` for permissions.
+- Use the `cp` command to copy the files into the `/usr/local/bin` directory.
+- To verify, go to `/usr/local/bin` in Terminal and confirm the files are there.
+- In the same folder, you might also find other global packages, like nodemon, that we installed earlier.
+- Next, create a folder for MongoDB to store its data using the `mkdir` command: `mkdir /data/db`.
+- Give MongoDB permission to write to this folder with `sudo chown -R $(id -un) /data/db`.
+- Now the MongoDB server is set up, but we need to start the process.
+- Run `mongod` to start the MongoDB server. This will run MongoDB in the background, waiting for connections on port 27017.
+- To interact with MongoDB, open another terminal window or tab.
+- Run `mongo` to start the MongoDB shell, which connects to the local MongoDB server.
+- In the shell, type `db` to see the current database. The default database is "test."
+- You could use the Mongo shell to connect to a remote database (MongoDB Atlas), but by default, it connects to the local database.
+- Next lecture will cover creating a new database and interacting with the Mongo shell.
+
+
+=============================================================
+============== Installing MongoDB on Windows
+
+- Installing MongoDB on Windows:
+   - Open browser, go to MongoDB.com.
+   - Click on "Products" > "MongoDB Server."
+   - Click on the green "Download" button.
+   - Choose "MongoDB Community Server."
+   - Select the current release (4.0.9).
+   - Choose "Windows" as OS.
+   - Download the default MSI package.
+   - If the download link doesn’t work, copy it and paste into the browser.
+   - After downloading, open the file from the "Downloads" folder.
+   - Click "Next" and agree to the license.
+   - Choose "Complete" installation version.
+   - Install MongoDB as a service to run in the background.
+   - Optionally install MongoDB Compass (GUI for MongoDB).
+   - Click "Install."
+   - After installation, click "Finish."
+
+- Create Data Directory:
+   - Go to the drive where MongoDB was installed (usually Local Disk C).
+   - Create a new folder called "Data."
+   - Inside the "Data" folder, create another folder called "DB."
+   - This folder is where MongoDB will store the databases.
+
+- Verify MongoDB Installation:
+   - Navigate to the MongoDB bin directory:
+     - C:\Program Files\MongoDB\Server\4.0\bin
+   - You should see MongoD.exe (server) and Mongo.exe (shell).
+   - Open PowerShell (or Command Prompt) and use `cd` to navigate to this directory.
+   - Run MongoD.exe to start the server:
+     - Command: `.\mongod.exe`
+   - The server should start and listen on port 27017.
+
+- Connecting to MongoDB:
+   - Open another PowerShell window.
+   - Navigate to the MongoDB bin directory again and run Mongo.exe (Mongo shell):
+     - Command: `.\mongo.exe`
+   - You should see the test database.
+   - Run the `db` command to verify the connection.
+
+- Stopping MongoDB Server:
+   - To stop the server, use Ctrl+C in the PowerShell window running MongoD.exe.
+
+- Running MongoDB from Another Directory:
+   - If you try running MongoD.exe from a different directory, you might get an error saying "mongod.exe is not recognized."
+   - This is because Windows doesn't know where to find MongoD.exe.
+   - To fix this, you need to add MongoDB to the system’s PATH.
+
+- Adding MongoDB to the PATH:
+   - Open "System Properties" > "Advanced" > "Environment Variables."
+   - In "System Variables," find "Path" and click "Edit."
+   - Add the MongoDB bin directory path:
+     - Example: `C:\Program Files\MongoDB\Server\4.0\bin`
+   - Click "OK" to save.
+   - Test it by running `mongod.exe` from any directory in PowerShell.
+   - It should work without needing to navigate to the MongoDB bin directory.
+
+- Conclusion:
+   - MongoDB and MongoDB Compass are installed successfully on Windows.
+   - A "Data" directory was created to store the databases.
+   - MongoDB was added to the system’s PATH, allowing it to be run from any directory.
+
+
+
+
+
+
+=============================================================
+============== Creating a Local Database
+
+- MongoDB works the same on both Windows and Mac OS.
+
+- Mongo Shell is a terminal application for MongoDB.
+
+- To open the Mongo Shell, type `mongo` in the command line.
+
+- To clear the terminal, use `Command + K`.
+
+- To create a database, use the `use` command:
+  Example: `use natours-test`
+  This will switch to the database `natours-test`. If it doesn't exist, it will create it.
+
+- Inside a database, we have collections, and collections contain documents.
+
+- Documents in MongoDB are similar to JSON objects.
+
+- To insert a document into a collection, use `db.collection.insertOne()` or `insertMany()` for multiple documents.
+
+  Example: `db.tours.insertOne({name: "The Forest Hiker", price: 297, rating: 4.7})`
+
+- MongoDB automatically creates an ObjectID for every document, which serves as the unique identifier.
+
+- To check the data, use:
+  `db.tours.find()` to view the document you just inserted.
+
+- MongoDB stores data in BSON format (Binary JSON), which is easy to work with in JavaScript.
+
+- Use the `show dbs` command to list all the databases in MongoDB.
+
+- Use the `use` command to switch between databases:
+  Example: `use admin`
+
+- To view the collections in a database, use:
+  `show collections`
+
+- MongoDB automatically creates a collection when you insert a document into it.
+
+- To quit Mongo Shell, type `quit`.
+
+- MongoDB persists data even after you exit. You can check it by running the `show dbs` command again to see that the data remains.
+
+- Ready to move on to the next lecture, where we'll explore CRUD operations (Create, Read, Update, Delete) on MongoDB.
+
+
+=============================================================
+============== CRUD_ Creating Documents
+
+- This video is part of the CRUD operation series (first one on creating documents).
+
+- Why are we doing all of this in a terminal? 
+  - We're learning MongoDB fundamentals without the context of any application.
+  - MongoDB can be used with any language/framework, not just Node.js.
+  - Understanding MongoDB in isolation helps build a strong foundation.
+
+- Later, we’ll connect MongoDB with our Express application and use a MongoDB driver for Node.js to interact with the database.
+
+- In the last lecture, we created:
+  - A new database (`natours-test`).
+  - A collection (`tours`).
+  - One document using `insertOne()`.
+
+- Now, let's create two documents at the same time using `insertMany()`:
+  - Use `db.tours.insertMany([{}])` to insert multiple documents.
+  - `insertMany` accepts an array of objects.
+  - Each object represents a document.
+
+- Example of inserting two documents:
+  - First document:
+    - Name: "The Sea Explorer"
+    - Price: 497
+    - Rating: 4.8
+  - Second document:
+    - Name: "The Snow Adventurer"
+    - Price: 997
+    - Rating: 4.9
+    - Additional field: `difficulty: "easy"`
+
+- MongoDB documents are flexible: 
+  - Different documents in the same collection can have different structures.
+  - No need for all documents to have the same fields.
+
+- Once you run the command, MongoDB generates a unique `ObjectId` for each document.
+
+- To verify, use `db.tours.find()` to see the three documents:
+  - The one from the previous lecture and the two just created.
+
+- Key takeaway:
+  - We used `insertMany()` to insert an array of two objects (documents).
+
+- Next lecture will cover advanced queries to search for data in MongoDB.
+
+- Moving on to the next topic.
+
+
+=============================================================
+============== CRUD_ Querying (Reading) Documents
+
+MongoDB Query Operators - Key Concepts
+
+1. Basic Find Query:
+   - `db.tours.find()` → retrieves all documents in the "tours" collection.
+
+2. Simple Search Criteria:
+   - Search by specific field (e.g., name or difficulty).
+   - Example: `db.tours.find({name: 'The Forest Hiker'})` → returns document where the name matches exactly.
+   - Example: `db.tours.find({difficulty: 'easy'})` → returns all documents with difficulty set to 'easy'.
+
+3. Using Query Operators:
+   - Operators are used to define more specific conditions in queries.
+
+4. Using `$lte` (Less Than or Equal):
+   - Example: `db.tours.find({price: {$lte: 500}})` → finds tours with a price less than or equal to 500.
+   - `$lte` stands for "less than or equal".
+   - MongoDB operators use a `$` symbol (e.g., `$lte`, `$gt`).
+
+5. Multiple Criteria - AND Query:
+   - Use multiple fields inside the filter object to apply multiple conditions.
+   - Example: `db.tours.find({price: {$lte: 500}, rating: {$gte: 4.8}})` → returns tours with price ≤ 500 AND rating ≥ 4.8.
+
+6. OR Query:
+   - Use `$or` operator to find documents where one of the conditions is true.
+   - Syntax: `db.tours.find({$or: [{condition1}, {condition2}]})`.
+   - Example: `db.tours.find({$or: [{price: {$lte: 500}}, {rating: {$gte: 4.8}}]})` → returns documents where either the price is ≤ 500 or the rating is ≥ 4.8.
+
+7. Combination of Queries:
+   - Queries can be a combination of AND and OR.
+   - Example: Search for documents where:
+     - Price is less than 500 OR rating is ≥ 4.8.
+     - The combination of conditions can be complex but follows the same syntax.
+
+8. Changing Comparison Operators:
+   - Example with a greater than condition: `db.tours.find({price: {$gt: 500}})` → find tours with price greater than 500.
+   - Switching from `<` to `>` changes the results.
+
+9. Projection:
+   - Use projection to specify which fields to return in the output.
+   - Example: `db.tours.find({}, {name: 1})` → returns only the `name` field.
+   - The `1` indicates inclusion of the field, and other fields are excluded unless explicitly included.
+
+10. MongoDB Operators:
+   - `$lte` → Less Than or Equal
+   - `$gte` → Greater Than or Equal
+   - `$gt` → Greater Than
+   - `$lt` → Less Than
+   - `$or` → Logical OR for conditions.
+   - More operators exist beyond these; this is just an introduction.
+
+11. Summary:
+   - MongoDB queries allow flexibility with filter objects, including conditions and logical operators.
+   - The operators used (e.g., `$lte`, `$gte`, `$or`) help refine the query for precise results.
+   - Projection helps limit the data returned, useful for performance or specific data needs.
+   - This lesson serves as an introduction to MongoDB query operators, more operators will be explored in future lessons.
+
+
+=============================================================
+============== CRUD_ Updating Documents
+
+Mongodb - Updating Documents:
+
+1. Update Operations:
+    - `updateOne()`, `updateMany()`, `replaceOne()`
+    - Similar to `insertOne()` and `insertMany()`
+
+2. `updateOne()`:
+    - Updates only the first document that matches the query.
+    - Syntax:
+        db.collection.updateOne(
+            { query },         // Filter: condition to match the document(s)
+            { $set: { field: value } }   // Update: field(s) and new value(s)
+        )
+    - Example:
+        db.tours.updateOne({ name: "The Snow Adventure" }, { $set: { price: 597 } })
+    - Only the first document matching the query is updated.
+
+3. `updateMany()`:
+    - Used when multiple documents need to be updated.
+    - Syntax:
+        db.collection.updateMany(
+            { query },         // Filter: condition to match multiple documents
+            { $set: { field: value } }   // Update: field(s) and new value(s)
+        )
+    - Example:
+        db.tours.updateMany(
+            { price: { $gt: 500 }, rating: { $gte: 4.8 } },
+            { $set: { premium: true } }
+        )
+    - All documents that match the query will have the field updated.
+
+4. Creating New Fields:
+    - If the field doesn't exist, it can be created using `$set`.
+    - Example: Adding a `premium` field to premium tours:
+        db.tours.updateMany(
+            { price: { $gt: 500 }, rating: { $gte: 4.8 } },
+            { $set: { premium: true } }
+        )
+    - New field (`premium`) is added only if it doesn't exist in the document already.
+
+5. Checking Updates:
+    - Use `find()` to check the updates:
+        db.tours.find({ name: "The Snow Adventure" })
+
+6. Important Operators:
+    - `$set`: Updates existing fields or adds new fields with values.
+    - `$gt` (greater than) and `$gte` (greater than or equal to) are comparison operators used in the query to filter documents based on conditions.
+
+7. `replaceOne()`:
+    - Completely replaces a document (not just parts).
+    - Syntax:
+        db.collection.replaceOne({ query }, { newDocument })
+    - This operation is less common than `updateOne()` and `updateMany()`.
+    - Use it when you need to completely replace the document content.
+
+8. Summary:
+    - Use `updateOne()` when you want to update just one document.
+    - Use `updateMany()` when you want to update multiple documents at once.
+    - Use `$set` to modify existing fields or add new fields.
+    - If you need to replace an entire document, use `replaceOne()`.
+
+Next step: Deleting documents in MongoDB.
+
+=============================================================
+============== CRUD_ Deleting Documents
+
+MongoDB - Deleting Documents:
+
+1. Delete Operations:
+    - `deleteOne()`: Deletes one document that matches the query.
+    - `deleteMany()`: Deletes multiple documents that match the query.
+
+2. `deleteOne()`:
+    - Deletes only the first document that matches the query.
+    - Syntax:
+        db.collection.deleteOne({ query })
+    - Example:
+        db.tours.deleteOne({ rating: { $lt: 4.8 } })
+    - Only the first document matching the condition will be deleted.
+
+3. `deleteMany()`:
+    - Deletes all documents that match the query.
+    - Syntax:
+        db.collection.deleteMany({ query })
+    - Example:
+        db.tours.deleteMany({ rating: { $lt: 4.8 } })
+    - All documents matching the query will be deleted.
+
+4. Deleting All Documents:
+    - To delete all documents in a collection, pass an empty object as the query.
+    - Syntax:
+        db.collection.deleteMany({})
+    - This will delete every document in the collection, so be careful!
+    - Always ensure you have a backup before running this operation.
+    - Example (Don't execute unless absolutely sure):
+        db.tours.deleteMany({})   // Deletes all documents in the collection
+
+5. Deletion Result:
+    - MongoDB will return the number of documents affected by the operation.
+    - Example output:
+        { "acknowledged": true, "deletedCount": 1 }
+
+6. Important Reminder:
+    - Be cautious when deleting: Deleting all documents in a collection is irreversible.
+    - Always check that your query is correct before running a deletion, especially for critical operations.
+
+Summary:
+- Use `deleteOne()` to delete a single document.
+- Use `deleteMany()` to delete multiple documents based on a condition.
+- An empty object `{}` in the query deletes all documents in the collection, so use this carefully.
+
+=============================================================
+============== Using Compass App for CRUD Operations
+
+MongoDB Compass - GUI for MongoDB:
+
+1. MongoDB Compass Overview:
+    - MongoDB Compass is a graphical user interface (GUI) provided by MongoDB for interacting with databases instead of using the terminal.
+    - It allows you to perform the same operations as the Mongo shell but with a visual interface.
+
+2. Downloading MongoDB Compass:
+    - Go to the MongoDB website.
+    - Navigate to the "Tools" section and select MongoDB Compass.
+    - Choose the stable version for your platform (e.g., Mac OS).
+    - Download and install Compass.
+    - You may need to fill out a form to download the software.
+
+3. Creating a Connection to MongoDB:
+    - When you first open Compass, it should prompt you to create a new connection.
+    - If you're not on the connection screen, click "New Connection" on the left sidebar.
+    - Make sure the MongoDB server is running (default port: 27017).
+    - By default, Compass will fill in the connection details (Hostname: localhost, Port: 27017).
+    - Click "Connect" to connect to your local MongoDB instance.
+
+4. Navigating Databases and Collections:
+    - Once connected, you'll see a list of all databases on the left.
+    - You can view a specific database (e.g., `natours` or `test`) and its collections, like `tours`.
+    - The collections and documents are displayed in a visual format for easy access and management.
+
+5. Inserting a Document:
+    - You can create a new document directly in Compass by filling out the fields.
+    - Example: Insert a new tour document:
+        - Name: The Forest Hiker
+        - Price: 297
+        - Rating: 4.7
+    - After filling in the fields, click "Insert" to add the document.
+    - You can confirm the insertion by using `db.tours.find()` in the terminal.
+
+6. Editing Documents:
+    - You can edit documents directly in Compass by selecting a document and clicking the "Edit" button.
+    - Example: Change the price from 297 to 997, and click "Update" to save the changes.
+
+7. Deleting Documents:
+    - To delete a document, select it and click the "Delete" button.
+    - Example: Delete the document you just created.
+
+8. Querying Documents:
+    - In Compass, you can write queries in the GUI just like in the Mongo shell.
+    - Example: Find all tours with a price less than 700.
+    - Compass offers auto-suggestions for operators like `$lt` (less than) and `$lte` (less than or equal).
+    - Hit "Return" after writing the query to see matching documents.
+
+9. Projection:
+    - You can use projection to select specific fields from the documents.
+    - Example: Only display the `name` field by using `{ name: 1 }` in the projection area.
+
+10. Resetting Queries:
+    - You can reset queries and clear filters in Compass to return to the initial view.
+
+11. Advanced Features:
+    - Compass also supports advanced features like:
+        - Aggregations: Perform complex queries and data transformations.
+        - Schema Analysis: Analyze the structure of your data.
+        - Indexes: Create and manage indexes to optimize queries.
+        - Validation: Define rules for document validation in collections.
+
+12. Benefits of Using Compass:
+    - Compass provides a visual and user-friendly interface to manage MongoDB databases and collections.
+    - It helps in performing complex tasks like aggregations, schema analysis, and index creation in an easy-to-understand manner.
+
+Summary:
+- MongoDB Compass is a GUI that makes MongoDB easier to work with for visual learners.
+- It allows for managing databases, collections, documents, and querying all in a graphical environment.
+- Advanced features such as schema analysis and aggregation are also available.
+
+=============================================================
+============== Creating a Hosted Database with Atlas
+
+- Now, let's create a remote database hosted on MongoDB Atlas.
+- Instead of using a local database, we'll use a remote database on MongoDB Atlas for development.
+- MongoDB Atlas is a database-as-a-service provider, making it easy to manage and scale databases.
+- Benefits of using Atlas:
+    - No need to export data from local database and upload to hosted database when deploying the app.
+    - Always have your data in the cloud, accessible from anywhere.
+- Students without internet access can still use a local database as we learned in previous sections.
+- MongoDB Atlas will allow us to connect our application with both remote (Atlas) and local databases.
+  
+Steps to Set Up MongoDB Atlas:
+1. Go to MongoDB website > Products > MongoDB Atlas.
+2. Click on "Start Free" to create a free account.
+3. Once logged in, you will be able to create a new project (click "Create a New Project" on the left side or use the button at the top).
+4. Name the project (e.g., "natours-app" or just "natours").
+5. Set yourself as the Project Owner (default permission).
+6. Click "Create Project".
+7. After the project is created, click "Build a Cluster".
+8. Cluster is an instance of the database. Use default settings to create a free cluster (M0 plan), which provides:
+   - 512MB storage
+   - 100 simultaneous connections max
+9. Wait for the cluster creation process to complete (it might take some time).
+10. Once the cluster is ready, you now have a blank, empty database to connect to your development environment.
+
+Next step: Connecting the application to MongoDB Atlas (covered in the next video).
+
+=============================================================
+============== Connecting to Our Hosted Database
+
+- Final step: Connect remote hosted database with Compass app and Mongo shell.
+
+Steps to Connect MongoDB Atlas:
+1. In Atlas, click on "Connect" button.
+2. Add your current IP address to allow your computer to connect to the cluster.
+3. Create a username (e.g., "Jonas") and a password (auto-generate or create your own). Save the password securely.
+4. Open your app's config file and save the database password as an environment variable (e.g., DATABASE_PASSWORD).
+5. Create the database user and set permissions.
+6. Choose "MongoDB Compass" as the connection method.
+7. Copy the connection string and open Compass.
+8. In Compass, hit "Connect" and it will automatically detect the connection string in your clipboard.
+9. Paste the password from the config file and click "Connect".
+10. Once connected, create a new database (e.g., "natours").
+11. Create a collection (e.g., "tours") within the database.
+12. Insert the first document (e.g., "The Forest Hiker" with price and rating).
+13. In Atlas, you can see the new collection and data.
+14. To allow access from anywhere (for development flexibility), go to "Security" > "IP Whitelist" > Add IP address > Select "Allow Access From Anywhere".
+
+Steps to Connect MongoDB Shell:
+1. Go back to Atlas, click "Connect" and select "Connect with Mongo Shell".
+2. Copy the connection string and open terminal.
+3. Quit any previous Mongo shell connections (e.g., local server).
+4. Paste the copied connection string into the terminal and hit "Return".
+5. Enter your password from the config file when prompted.
+6. Once connected, show databases by typing `show dbs` and you should see the "natours" database.
+7. Switch to the "natours" database using `use natours`.
+8. Query the "tours" collection using `db.tours.find()`. You should see the document inserted earlier.
+
+Summary:
+- You now have Compass, Mongo shell, and Atlas all connected and working with your remote database.
+- Next, you will connect your database to an Express application to start using it in your project.
+
