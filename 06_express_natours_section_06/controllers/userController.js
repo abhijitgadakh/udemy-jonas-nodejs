@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 const users = JSON.parse(
-  fs.readFileSync(`${__dirname}/../dev-data/data/users.json`),
+  fs.readFileSync(`${__dirname}/../dev-data/users.json`)
 );
 
 exports.getAllUsers = (req, res) => {
@@ -35,7 +35,7 @@ exports.createUser = (req, res) => {
         message: 'user added successfully',
         data: { user },
       });
-    },
+    }
   );
 };
 
@@ -80,7 +80,7 @@ exports.updateUser = (req, res) => {
         message: 'User added successfully',
         data: { updatedUser },
       });
-    },
+    }
   );
 };
 
@@ -97,6 +97,6 @@ exports.deleteUser = (req, res) => {
         message: 'user deleted successfully',
         data: null,
       });
-    },
+    }
   );
 };
