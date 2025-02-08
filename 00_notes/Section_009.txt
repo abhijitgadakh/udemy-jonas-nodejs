@@ -1,0 +1,800 @@
+=========================================================
+================ Section Intro
+
+Notes on Error Handling Strategy
+
+The importance of error handling in backend applications.
+They've mentioned multiple times the need for a better error-handling strategy, and now it's time to build it.
+
+ Key Points:
+- Error handling is an essential aspect of any backend application.
+- The instructor stresses why error handling deserves its own section in the course.
+- In this section, Express and environment variables will be used to create a robust error-handling workflow.
+- The goal is to learn how to build an error-handling system that can be reused for future applications.
+
+Takeaway:
+- Error handling is critical and will be implemented using Express and environment variables in this section.
+- This workflow can be adapted for your own applications later on.
+
+
+=========================================================
+================ Debugging Node.js with ndb
+
+# Debugging Node.js: Notes
+
+- **Introduction**:
+  - Debugging is essential as bugs will always exist, no matter how careful we are.
+  - This video introduces a debugging tool (NDB) that we might use throughout the course.
+
+- **Debugging Tools**:
+  - **VS Code**: Commonly used for debugging, but NDB (Node Debugger) is a recent Google tool for this.
+  - **Installation of NDB**:
+    - NDB is an npm package.
+    - Install globally using `npm install -g ndb`.
+    - On a Mac, may require `sudo`.
+    - If global installation isn't possible, install locally as a dev dependency using `npm install --save-dev ndb`.
+  - Once installed, add the following script in `package.json`:
+    ```json
+    "scripts": {
+      "debug": "ndb server.js"
+    }
+    ```
+
+- **Running the Debugger**:
+  - Finish the process that is currently running to avoid port conflicts.
+  - Run the script using `npm run debug`.
+  - A new Chrome window (headless) opens with the Node Debugger.
+  
+- **Debugger Features**:
+  - **File System**: The complete project directory is visible.
+  - **Console**: Displays app outputs, such as database connection and app status.
+  - **Memory & Performance**: Available but not covered in this video.
+  - **Edit Code in Debugger**:
+    - You can directly edit files from the debugger, and changes will reflect in the code.
+    - Example: Added a comment in `server.js` using the debugger, saved it, and it appeared in the code editor.
+
+- **Breakpoints**:
+  - **Setting Breakpoints**: A breakpoint halts the code execution at a specific line for inspection.
+    - To set a breakpoint, click next to the line number (e.g., line 21).
+    - The green marker indicates a breakpoint.
+  - **Running the Script Again**: Right-click and choose "Run this script" to trigger the breakpoint.
+  - **Inspection**: Once paused at a breakpoint, inspect variables.
+    - Example: Inspect `port`, which was set to `3000`, by hovering over it.
+    - **Scope**: Shows all variables accessible in the current context (e.g., `directoryName`, `require`, etc.).
+
+- **Exploring Variables**:
+  - **App Variable**: Inspect the Express app's internal variables.
+    - Look for the middleware stack (e.g., `jsonParser`, `express.static`, `morgan`).
+  - **Global Variables**: 
+    - Access `process` and `process.env`, which contains environment variables (e.g., database connection string, password).
+
+- **Resuming Execution**:
+  - After inspection, resume execution using the button in the debugger.
+  - This continues the code execution until the next breakpoint or completes the script.
+
+- **Example Debugging**:
+  - Inspect the result of a database query by adding a breakpoint in the handler function (e.g., `getAllTours` in `tourController.js`).
+  - When the breakpoint is hit, the debugger shows the request, response, and tour data.
+  - **Request Object**: Shows URL, method, query parameters.
+  - **Tours Data**: View the result of the query.
+  - **Response Object**: Contains response properties, but focus on the tours.
+
+- **Avoiding Console Logs**:
+  - Debugger provides a more efficient way to inspect variables, eliminating the need for excessive `console.log` statements.
+
+- **Introducing a Bug**:
+  - A small bug is introduced into the code to demonstrate how the debugger can help locate issues.
+  - Skip to a section of code that’s running longer than expected (3 minutes and 29 seconds in the video).
+
+# Key Takeaways:
+1. Use NDB to debug Node.js instead of relying on traditional methods like `console.log`.
+2. Breakpoints allow for step-by-step debugging and inspection of variables.
+3. The debugger offers real-time code editing, which can be useful for fixing issues immediately.
+4. Global variables and environment variables can be accessed directly within the debugger.
+5. The process of debugging with breakpoints is more efficient than traditional debugging with `console.log`.
+
+=========================================================
+================ Handling Unhandled Routes
+
+// Notes from the video: Error handling for undefined routes
+
+1. **Undefined Routes Handler**:
+   - When a route is requested that isn't defined yet, Express returns an HTML 404 error.
+   - Example:
+     - If the URL is `api/tours`, and it's not defined, Express responds with a 404 error.
+     - Misspelling `tour` (e.g., `api/tur`) gives the same error.
+     - When the route is expecting an ID parameter, but the ID is invalid (e.g., incorrect format), it gives an error about the object ID cast failure.
+
+2. **Current Response**:
+   - By default, Express returns an HTML response with a 404 error.
+   - We want to handle these cases by sending back JSON, not HTML.
+
+3. **Fixing the Response**:
+   - Open `app.js` to define error handling for undefined routes.
+   - Remove any unnecessary middleware used only for demonstration purposes.
+
+4. **Middleware Order**:
+   - Express middleware runs in the order they are defined.
+   - If a route handler (e.g., `tourRouter` or `userRouter`) doesn't handle a request, it reaches the final middleware.
+
+5. **Setting up the Route Handler**:
+   - Use `app.all()` to handle all HTTP methods (GET, POST, DELETE, PATCH) for any URL.
+   - The `*` wildcard represents all routes that haven't been handled yet.
+
+6. **Sending a JSON Response**:
+   - In the handler, send a 404 status code and a JSON response with a message.
+   - Example:
+     ```js
+     res.status(404).json({
+       status: 'fail',
+       message: `Can't find ${req.originalUrl} on this server.`,
+     });
+     ```
+   - `req.originalUrl` provides the requested URL.
+
+7. **Testing the Handler**:
+   - Test the handler by sending requests to undefined routes.
+   - Instead of an HTML error, you get a structured JSON error message.
+   - Example response:
+     ```json
+     {
+       "status": "fail",
+       "message": "Can't find /api/tours on this server."
+     }
+     ```
+
+8. **Middleware Execution Order**:
+   - This error handler middleware should be placed after all other route handlers.
+   - If placed at the top of the application, it would catch all requests, making it impossible for other routes to be accessed.
+   - Example:
+     - If the error handler is placed first, all requests (e.g., `GET /tour`) will match this handler and return the JSON error.
+   - The correct order ensures that this handler only runs if no other routes match.
+
+9. **Conclusion**:
+   - Proper error handling makes your API more user-friendly by providing structured JSON responses.
+   - In the next section, we will focus on real error handling.
+
+=========================================================
+================ An Overview of Error Handling
+
+// Notes from the video: Introduction to Error Handling in Express
+
+1. **Current Error Handling Approach**:
+   - So far, errors have been handled by sending an error message as JSON in each route handler when something goes wrong.
+   - This is not an ideal way to manage errors in the application.
+
+2. **Error Handling Overview in Express**:
+   - The goal of this section is to improve error handling by centralizing it in the application.
+   
+3. **Types of Errors**:
+   - **Operational Errors**:
+     - These are predictable errors that occur due to user, system, or network issues.
+     - Examples:
+       - User accessing an invalid route.
+       - Invalid user input.
+       - Application failing to connect to the database.
+     - These errors are expected, and we can handle them in advance.
+     - "Exception" and "Error" are often used interchangeably for these kinds of errors.
+   
+   - **Programming Errors**:
+     - These are bugs that developers introduce into the code.
+     - Examples:
+       - Trying to read properties from an undefined variable.
+       - Using `await` without `async`.
+       - Accidentally using `request.query` instead of `request.body`.
+     - These are difficult to predict and harder to find, but they are inevitable.
+
+4. **Handling Operational Errors in Express**:
+   - Express is built to handle operational errors easily.
+   - The key is to use **global error handling middleware** to catch errors coming from all over the application (routes, models, etc.).
+   - The goal is to centralize error handling, so the application sends a nice, clear response to the client.
+
+5. **Benefits of Global Error Handling Middleware**:
+   - It provides separation of concerns. 
+   - We don't need to worry about error handling in individual route handlers or business logic.
+   - Instead, errors are passed down to the global error handler, which decides what to do (retry, crash, ignore, etc.).
+
+6. **Next Steps**:
+   - Now, we will start implementing the global error handling middleware in Express.
+
+=========================================================
+================ Implementing a Global Error Handling Middleware
+
+// Notes from the video: Implementing Global Error Handling Middleware in Express
+
+// 1. **Goal**:
+//    - We need to implement a **global error handling middleware** to handle operational errors in one central place.
+//    - Example of an operational error: A user hitting a non-existent URL (404 error).
+
+// 2. **Current Approach (Problem)**:
+//    - Error handling code is scattered all over the place in different routes, like this:
+//      ```js
+//      // Error handling in each route handler
+//      if (error) {
+//        res.status(500).send(error);
+//      }
+//      ```
+//    - We want to centralize all error handling to avoid duplication and make the code cleaner.
+
+// 3. **Creating the Error Handling Middleware**:
+//    - In Express, error handling middleware is simple to implement using `app.use()`.
+//    - The middleware must accept **four arguments**: `err`, `req`, `res`, `next`. Express recognizes this signature as an error handling middleware.
+//      ```js
+//      app.use((err, req, res, next) => {
+//        // Error handling code here
+//      });
+//      ```
+
+// 4. **Error Handling Middleware Structure**:
+//    - **First Argument: Error (`err`)**: The error object.
+//    - **Second Argument: Request (`req`)**: The request object.
+//    - **Third Argument: Response (`res`)**: The response object.
+//    - **Fourth Argument: Next (`next`)**: A callback function to pass control to the next middleware.
+   
+//    Example:
+//    ```js
+//    app.use((err, req, res, next) => {
+//      const statusCode = err.statusCode || 500; // Default to 500 if not defined
+//      const status = err.status || "error"; // Default to "error" if not defined
+//      res.status(statusCode).json({
+//        status: status,
+//        message: err.message,
+//      });
+//    });
+//    ```
+
+// 5. **Setting Default Error Status and Code**:
+//    - If no status code is provided in the error, default to **500 (Internal Server Error)**.
+//    - If no status is provided, default to **"error"**.
+//    ```js
+//    const statusCode = err.statusCode || 500;
+//    const status = err.status || "error";
+//    ```
+
+// 6. **Creating and Throwing an Error**:
+//    - You can create an error using JavaScript's built-in `Error` constructor:
+//      ```js
+//      const err = new Error("Route not found");
+//      err.status = "fail";
+//      err.statusCode = 404;
+//      ```
+//    - This error is then passed to the next middleware with `next(err)` to trigger the global error handler.
+
+// 7. **Using `next(err)`**:
+//    - When you pass an error to `next()`, Express will skip all remaining middlewares and pass control to the global error handler.
+//      ```js
+//      next(err);  // Pass the error to the global error handler
+//      ```
+
+// 8. **Testing the Error Handler**:
+//    - To test the global error handler, try accessing a non-existing route. It will trigger a 404 error and the middleware will send the appropriate response.
+//      ```js
+//      // Non-existing route:
+//      app.get('/wrong-route', (req, res, next) => {
+//        const err = new Error("Route not found");
+//        err.status = "fail";
+//        err.statusCode = 404;
+//        next(err);
+//      });
+//      ```
+
+// The above steps create a simple, centralized error handler to handle operational errors in your application.
+
+
+=========================================================
+================ Better Errors and Refactoring
+
+// Notes from the video: Creating a Better AppError Class and Refactoring
+
+// 1. **Creating AppError Class**:
+//    - Let's create a new file in the Utilities folder called **AppError** to hold our custom error class.
+//    - The AppError class will extend the built-in JavaScript **Error** class.
+//    - By extending the **Error** class, we can utilize the built-in functionality of errors in JavaScript.
+
+class AppError extends Error {
+    constructor(message, statusCode) {
+        super(message); // Call parent class constructor with the message
+        this.statusCode = statusCode; // Set status code
+        this.status = statusCode.toString().startsWith('4') ? 'fail' : 'error'; // Auto-detect fail or error based on the statusCode
+        this.isOperational = true; // Mark it as operational error
+        Error.captureStackTrace(this, this.constructor); // Capture stack trace excluding this constructor
+    }
+}
+
+// 2. **Constructor Details**:
+//    - The **constructor** is called each time an object is created from the AppError class.
+//    - The constructor takes two parameters: `message` and `statusCode`.
+//    - **super(message)** is called to pass the message to the parent class (Error), which sets the `message` property on the error.
+
+
+// 3. **Status Code and Status**:
+//    - The `statusCode` is passed into the AppError constructor and determines the error type.
+//    - If the status code starts with '4' (like 400), it's considered a 'fail' status, otherwise, it’s an 'error'.
+//    - This makes error classification automatic, saving us from manually passing in 'fail' or 'error' each time.
+
+
+// 4. **Operational Errors**:
+//    - This class is designed for **operational errors**, which are predictable errors (e.g., invalid user input).
+//    - We add a property `isOperational` to mark these as operational errors for easier filtering later.
+
+// 5. **Capturing Stack Trace**:
+//    - The **stack trace** shows the error's location in the code.
+//    - By using `Error.captureStackTrace()`, we ensure the stack trace is captured without polluting it with the current class constructor.
+   
+// 6. **Exporting the AppError Class**:
+//    - Finally, we **export** the AppError class so that it can be used throughout the application.
+
+module.exports = AppError;
+
+// 7. **Using AppError**:
+//    - In other parts of the application, we can now create errors using the AppError class:
+//      ```js
+//      const error = new AppError('Invalid data', 400);
+//      next(error); // Pass the error to the global error handler
+//      ```
+
+// 8. **Refactoring the Error Handling**:
+//    - We refactor the code to replace manual error creation with `new AppError(message, statusCode)`.
+//    - This simplifies error handling and ensures consistency throughout the app.
+
+// 9. **Global Error Handler**:
+//    - The error handler should be added to catch all operational errors created using AppError. We now need to move this handler to a separate controller.
+
+// 10. **Error Controller**:
+//     - We create an **errorController** to manage different error handling functions.
+//     - While it might seem unconventional to create an error controller, it helps us organize error handling logic for the entire application.
+
+
+// 11. **Final Steps**:
+//     - In the app, we import the **globalErrorHandler** from the error controller and use it as middleware.
+//     - The middleware will handle all operational errors in a centralized manner.
+
+// Final testing: The refactoring works as expected, and the error handling is simplified and more consistent across the app.
+
+
+
+=========================================================
+================ Catching Errors in Async Functions
+
+// In this lecture, we are going to refactor our error handling for async functions
+// Currently, every async function has a try-catch block, but this makes the code messy and repetitive.
+
+// Goal: Remove duplicate try-catch blocks and make the code more focused and cleaner.
+
+// Solution: Create a utility function `catchAsync` to wrap async functions and handle errors globally.
+
+// Step-by-Step:
+
+1. **Create a catchAsync function**
+   - This function will take an async function as an argument, handle its errors, and pass them to the global error handler.
+
+2. **Function Definition:**
+   const catchAsync = (fn) => {
+       return (req, res, next) => {
+           fn(req, res, next).catch(next);
+       };
+   };
+
+3. **Wrap Async Functions with catchAsync:**
+   - Inside any async function, such as `createTour`, we remove the try-catch block and wrap it with `catchAsync`.
+
+   Example:
+   ```js
+   // Instead of this:
+   try {
+       const tour = await Tour.create(req.body);
+       res.status(201).json({ tour });
+   } catch (error) {
+       next(error);
+   }
+
+   // We now use catchAsync:
+   const createTour = catchAsync(async (req, res, next) => {
+       const tour = await Tour.create(req.body);
+       res.status(201).json({ tour });
+   });
+
+4. How catchAsync works:
+  - The async function (like createTour) is passed as fn into catchAsync.
+  - The catchAsync function returns a new anonymous function that Express can call.
+  - Inside that function, fn is executed, and if any errors occur, they are caught using .catch(next) and passed to the global error handler.
+
+5. Issues to Fix:
+  - We need to ensure req, res, and next are properly passed to the wrapped function.
+  - In the previous implementation, createTour was being immediately executed. We need to make sure that it's only called when Express triggers it.
+
+6. Final Solution:
+  - The catchAsync function returns a new anonymous function that Express calls when needed, and inside that function, the original async function (fn) is called.
+  - Errors are caught by .catch(next) and passed to the global error handler.
+
+7. Export catchAsync:
+  - Move the catchAsync function to its own file, e.g., catchAsync.js, in the utilities folder.
+  - In the controller, import and use catchAsync for each async function.
+
+8. Testing:
+  - If an error occurs (e.g., invalid input), it will be caught by the catch block in catchAsync.
+  - The error will be passed to the global error handler and a proper error response will be sent back to the client.
+
+9. Refactor all async functions:
+  - Replace the try-catch blocks in all async controller functions with catchAsync.
+  - Add next to all handlers, ensuring that the error is passed to the global error handler.
+
+10. Note:
+  - The 500 status code is default when no specific code is provided. We’ll address that in a later lecture.
+
+11. Final Result:
+  - We successfully removed the duplicate try-catch blocks and made our error handling more centralized and cleaner.
+  - The error is now propagated through the catchAsync function to the global error handler.
+
+
+=========================================================
+================ Adding 404 Not Found Errors
+
+- We are going to add 404 errors to our tour handler functions using the AppError class.
+
+- Instead of using `catchAsync` in the router, it's easier to wrap async functions with it directly in the controller.
+
+- **Why not use catchAsync in the router?**
+  - If we use `catchAsync` in the router, we have to remember which functions are async and which are not.
+  - In the controller, every time we write an async function, we know it needs to be wrapped in `catchAsync`, making it simpler.
+
+- Example: I once ran into a bug where I wrapped a non-async function in `catchAsync`, causing issues that were difficult to debug. Since then, I avoid putting `catchAsync` in the router and prefer to place it close to the code that is actually asynchronous.
+
+- Now, let's implement 404 errors for "tour not found."
+
+### Handling 404 Error:
+
+- **Scenario**: When trying to get a tour with a valid but non-existing MongoDB ID, we get `null`, but we want a 404 error with a message saying "No tour found with that ID."
+  
+- **Solution**: 
+  1. In the `getTour` handler, check if the tour is null. If it is, we create an error using `AppError` and pass it to the next middleware.
+  
+  2. Example:
+     ```js
+     if (!tour) {
+         return next(new AppError('No tour found with that ID', 404));
+     }
+     ```
+
+- **Important**: Always return after calling `next` to avoid sending multiple responses.
+
+- **Importing AppError**: 
+  - Ensure the `AppError` class is imported at the top of the controller.
+
+- **Test the functionality**: 
+  - Use a non-existent ID in the request to test the 404 error and ensure it returns the correct message.
+
+### Implementing 404 Error in Other Handlers:
+
+- Similarly, implement error handling in `updateTour` and `deleteTour` handlers:
+  1. Check if the tour exists before performing the operation.
+  2. Example:
+     ```js
+     const tour = await Tour.findById(id);
+     if (!tour) {
+         return next(new AppError('No tour found with that ID', 404));
+     }
+     ```
+
+- **ESLint Error**: 
+  - In `deleteTour`, ESLint flagged an error because `tour` wasn’t defined. It saved me from creating a bug.
+  - To fix this, we simply need to store the result of the `Tour.findByIdAndDelete` operation in the `tour` variable.
+
+- **Why no 404 in `getAllTours`?**
+  - When no records are found (e.g., filtering tours or an empty page), returning a 404 is incorrect since the request was valid and returned zero results.
+  - Instead, send a 200 status with an empty array or no data message.
+  - If there’s a database failure, Mongoose will throw an error, which is caught by `catchAsync` and passed to the global error handler.
+
+=========================================================
+================ Errors During Development vs Production
+
+- In this video, we're implementing logic for different error messages in the development and production environments.
+
+- Right now, we are sending the same response message to everyone, regardless of the environment (development or production).
+
+- The goal is:
+  - In **production**, minimize error details to avoid exposing sensitive information to the client.
+  - In **development**, provide full error details (including error stack) for debugging purposes.
+
+- **Distinguishing between environments**:
+  - Use `process.env.NODE_ENV` to check if the environment is **development** or **production**.
+
+- **In development**:
+  - Send detailed error information like `err.stack` and the entire `error`.
+
+- **In production**:
+  - Send a simpler error response: only the status and the message (no stack trace or full error details).
+
+- To keep the code clean, create separate functions to handle errors for both environments:
+  - `sendErrorForDev` for development.
+  - `sendErrorForProd` for production.
+
+- **AppError Class**:
+  - Errors created using the `AppError` class are marked as operational (`isOperational: true`).
+
+- **Operational vs Non-Operational Errors**:
+  - Operational errors are those that are expected, such as user input errors or trying to access a non-existent route.
+  - Non-operational errors are unexpected, such as programming bugs or third-party package issues.
+
+- **Handling Operational Errors**:
+  - For operational errors, send the error message to the client in production (after checking `error.isOperational`).
+
+- **Handling Non-Operational Errors**:
+  - For unexpected errors, send a generic message like "Something went wrong" in production.
+  - Log the error to the console for developers to debug.
+
+- **Logging Errors**:
+  - Use `console.error` to log unexpected errors in the development environment.
+  - Use logging tools in production (e.g., Heroku logs) to track these errors.
+
+- **Recap**:
+  - In **development**, send detailed error information to help developers fix bugs.
+  - In **production**, send simple error messages, but log detailed errors for the developer's reference.
+  - Differentiate between operational and non-operational errors to control how much error information is sent to the client.
+
+- **Important**:
+  - MongoDB errors like validation errors are currently not marked as operational, so we need to mark them as operational to handle them correctly in the error flow.
+
+
+=========================================================
+================ Handling Invalid Database IDs
+
+// Notes on Mongoose Error Handling - Operational Errors
+
+// There are 3 types of errors we need to handle in Mongoose:
+
+1. **Invalid ID (CastError)**:
+   - Example: Passing an invalid ID to Mongoose.
+   - Mongoose can't convert this into a valid MongoDB ID.
+   - This results in an error with an extensive error object, stack trace, etc.
+   - In production, we need to return a meaningful error message, not the full error object.
+
+   // Steps to handle:
+   - **Identify** the error with `err.name === 'CastError'`.
+   - **Create a function** to handle the error and return a readable message, e.g., `Invalid ID: [value]`.
+
+2. **Duplicate Field (Duplicate Key Error)**:
+   - Example: Trying to create a tour with a name that's already taken.
+   - Mongoose throws a `duplicate key error` (e.g., Forest Hiker already exists).
+   - In production, return a meaningful message, such as "Tour name already exists."
+
+3. **Validation Error (Invalid Value for Field)**:
+   - Example: Updating a field with an invalid value, e.g., a rating average of 6 (max 5).
+   - Mongoose throws a `ValidationError` with a detailed object of errors.
+   - Multiple fields may have validation issues (e.g., ratings, difficulty level).
+   - In production, handle by providing a meaningful response indicating the validation failure.
+
+---
+
+// Creating Error Handlers:
+
+// 1. Handle CastError (Invalid ID):
+
+// Define a function for CastError handling.
+function handleCastError(err) {
+    let error = { ...err }; // Create a copy to avoid overriding the original error object.
+    
+    const message = `Invalid ${err.path}: ${err.value}`; // Construct a custom error message.
+
+    // Create a new AppError with a 400 status code (Bad Request).
+    error = new AppError(message, 400);
+    return error;
+}
+
+// 2. Apply the Error Handling:
+
+// In production, check if the error is a CastError and handle it:
+if (err.name === 'CastError') {
+    err = handleCastError(err);
+}
+
+// Return the error using a utility function (sendErrorProd) that formats the response for clients.
+
+---
+
+// Production Setup:
+
+// Use a "start:prod" script to run in production mode:
+// Run: `npm run start:prod` to simulate error handling in production.
+ 
+// Example response for invalid ID:
+{
+    "status": "fail",
+    "message": "Invalid ID: [invalidID]",
+    "statusCode": 400
+}
+
+// Conclusion:
+// - Handle operational errors (like CastError, duplicate key, and validation) gracefully in production.
+// - Always return a clear, user-friendly error message instead of internal error details.
+
+=========================================================
+================ Handling Duplicate Database Fields
+
+// Notes from the video on handling duplicate fields error
+
+// Handling duplicate fields error that occurs when a field is supposed to be unique
+// The error occurs when we try to create a new document with a name that already exists
+
+// Duplicate field error does not have a 'name' property (because it's caused by MongoDB, not Mongoose)
+
+// The error code we need to check is 11000
+
+// To handle this, we'll create a handler function for the error with code 11000
+// The handler function will be called 'handleDuplicateFields'
+
+// Create a meaningful error message to send back to the client
+// The message will say: "Duplicate field value: <value>"
+
+// To extract the duplicate field value (like the name), we'll use a regular expression
+// The value is enclosed in quotes, so we can use a regular expression to find text between quotes
+
+// Use a regular expression to match text between quotes
+// Search for: "regular expression match text between quotes" on Google
+
+// Use the following regular expression pattern:
+// /"([^"]*)"/
+
+// In the code:
+const value = error.errmsg; // The error property that contains the message
+const regex = /"([^"]*)"/; // Regular expression to match text between quotes
+const match = value.match(regex); // Match the value
+
+// If the match is successful, extract the first element of the array (the value inside quotes)
+const extractedValue = match[1];
+
+// Create a new AppError instance with a 400 status code and a custom message
+const message = `Duplicate field value: "${extractedValue}". Please use another value.`;
+return new AppError(message, 400);
+
+// Now the client will receive a more meaningful error message like:
+// "Duplicate field value: "The Forest Hiker". Please use another value."
+
+// In the next video, we'll handle the last of the three errors: validation errors.
+
+=========================================================
+================ Handling Mongoose Validation Errors
+
+// Notes from the video on handling Mongoose validation errors
+
+// Handling Mongoose validation errors when invalid data is sent (e.g., a short name for a tour)
+
+// In production, we might not see the detailed error message, but we can switch back to development mode
+// (npm start) to see the error in a more detailed format
+
+// The error object contains a property 'errors' that holds individual field error objects
+// Each error has a message for the field (e.g., name, difficulty, rating)
+
+// We want to extract all error messages and combine them into one string
+
+// Step-by-step guide:
+
+// 1. Check if the error is a Mongoose validation error by looking at error.name
+if (error.name === "ValidationError") {
+  // 2. Pass the error to a custom function: handleValidationErrorDB
+  error = handleValidationErrorDB(error);
+
+  // 3. Create an initial message for the error
+  const message = "Invalid input data. ";
+
+  // 4. Loop over all the error messages and extract them
+  const errors = Object.values(error.errors).map(el => el.message);
+
+  // 5. Join all error messages into one string with a period and space
+  const errorMessage = errors.join(". ");
+
+  // 6. Return the error as a new AppError with a 400 status code
+  return new AppError(`${message}${errorMessage}`, 400);
+}
+
+// Example:
+// Invalid input data. "Name must have more or equal than 10 characters". "Difficulty is invalid". "Rating is required"
+
+// In production, you will now see a nicely formatted error message with all field errors combined
+// "Invalid input data. Name must have more or equal than 10 characters. Difficulty is invalid. Rating is required."
+
+// Further improvements:
+  // - We could define error severity levels (e.g., low, medium, high)
+  // - Could implement notifications for critical errors (e.g., email admins)
+  
+// The current solution is robust enough for small applications
+// In case more operational errors are identified, we can add handling for them using a similar approach
+
+// This completes the error controller logic for Mongoose validation errors.
+
+=========================================================
+================ Errors Outside Express_ Unhandled Rejections
+
+// Notes on Unhandled Promise Rejections in Node.js
+
+// 1. Handling Errors in Express  
+// - Errors are passed to global error-handling middleware.
+// - This middleware sends relevant messages to the client depending on the error type.
+
+// 2. Unhandled Errors Outside Express  
+// - Errors can occur outside Express, like in MongoDB connection.
+// - These errors won't be caught by Express' error handler.
+ 
+// Example: Simulating an error by changing MongoDB password
+// (this will cause an unhandled promise rejection)
+
+// 3. What is an Unhandled Promise Rejection?  
+// - An unhandled promise rejection occurs when a promise is rejected 
+//   but not handled using .catch() or try-catch blocks.
+// - Node.js issues a deprecation warning for unhandled rejections.
+// - Future versions of Node may terminate the process for unhandled rejections.
+
+
+// 4. Fix for Handling Rejections  
+// - The easiest fix is adding a .catch() handler to the rejected promise.
+
+mongoose.connect(mongoURI)
+  .then(() => console.log('Connected'))
+  .catch(err => console.log(err)); // Handling rejection
+
+// 5. Global Handling of Unhandled Rejections  
+// - For larger apps, manually handling rejections for every promise can be difficult.
+// - We can handle all unhandled rejections globally using process.on('unhandledRejection').
+
+process.on('unhandledRejection', (err) => {
+  console.log(`Unhandled rejection: ${err.name} - ${err.message}`);
+});
+
+=========================================================
+================ Catching Uncaught Exceptions
+
+// Notes on Catching Uncaught Exceptions in Node.js
+
+// 1. What Are Uncaught Exceptions?  
+// - Uncaught exceptions are errors (bugs) that occur in synchronous code and 
+//   are not handled anywhere in the code.
+// - These errors can crash the application if not handled.
+
+// 2. Example of an Uncaught Exception  
+// - An error occurs when attempting to use an undefined variable (e.g., x is not defined).
+// - The error causes a stack trace to be printed in the console.
+
+// 3. Handling Uncaught Exceptions  
+// - Node.js provides a way to handle uncaught exceptions using the uncaughtException event.
+
+// Example:  
+process.on('uncaughtException', (err) => {
+  console.log('UNCAUGHT EXCEPTION! Shutting down...');
+  console.log(err.name, err.message); // Log error name and message
+  process.exit(1); // Gracefully shut down the server
+});
+
+// 4. Graceful Shutdown After Uncaught Exception  
+// - After an uncaught exception occurs, it is important to shut down the application 
+//   and restart it, as Node.js enters an unclean state after an uncaught exception.
+
+// 5. The Order of Event Handlers  
+// - It is important to place the uncaughtException handler at the top of the code 
+//   before any other code executes to catch errors that occur earlier in the code.
+
+// 6. Uncaught Exceptions in Express  
+// - If an uncaught exception happens inside Express middleware, Express's error-handling 
+//   middleware will catch it and handle it appropriately, depending on the environment (production or development).
+
+// 7. Best Practices  
+// - While unhandled rejections and uncaught exception handlers can be useful safety nets, 
+//   errors should ideally be handled where they occur (e.g., add .catch() for promises).
+// - Relying on global error handlers should be avoided unless necessary.
+
+// 8. Final Thoughts  
+// - Proper error handling is essential for building reliable applications.
+// - This section covers the basics of handling unhandled rejections and uncaught exceptions.
+// - Error handling can be more complex, but understanding these essentials will help you get started.
+
+
+
+
+
+
+
+
+
+
+
+
+
