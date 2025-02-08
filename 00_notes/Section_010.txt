@@ -1,0 +1,1679 @@
+=========================================================
+================ Section Intro
+
+// Notes from the first video in the section:
+
+// - Topic: Authentication, Authorization, and Security
+// - This is one of the most important and advanced sections of the course.
+
+// Authentication & Authorization Overview:
+// - Authentication: Users signing up and logging in to access the app.
+// - Authorization: Controlling access to protected parts of the app for logged-in users.
+// - Purpose: Makes the app feel more "real-world" by securing certain sections.
+
+// Techniques Used:
+// - JSON Web Tokens (JWT) will be used to implement authentication and authorization.
+// - JWT is a modern technique that's perfect for the API being built.
+
+
+=========================================================
+================ Modelling Users
+
+
+// Notes from the second video in the section:
+
+// Topic: User Model for Authentication and Authorization
+
+// Overview:
+// - Authentication & Authorization: Managing user sign-up, login, and access to routes/pages.
+// - The goal is to start by implementing the user model so we can create users in the database.
+
+// Task: Create user model in the model folder:
+// 1. Create a new file for the user model - `userModel.js`.
+// 2. Require the Mongoose package.
+// 3. Create a user schema and model, just like with the tours model.
+
+// Challenge:
+// - Create a schema with 5 fields: name, email, photo (string), password, and passwordConfirm.
+// - Create a model based on this schema.
+// - Export the model.
+// - The challenge is for you to do it yourself first, then solve it together in the video.
+
+// Schema Definition (Solution):
+// - `userSchema`: Create a new mongoose.Schema object.
+
+// Fields:
+// 1. Name:
+//    - Type: String
+//    - Required: true
+//    - Error message: "Please tell us your name!"
+// 2. Email:
+//    - Type: String
+//    - Required: true
+//    - Unique: true (to ensure no duplicate emails)
+//    - Convert to lowercase automatically.
+//    - Validate using a custom email validator with `validator.isEmail`.
+//    - Error message: "a valid email."
+// 3. Photo (Optional):
+//    - Type: String
+//    - Not required
+//    - Stores path to uploaded photo.
+// 4. Password:
+//    - Type: String
+//    - Required: true
+//    - Password must have at least 8 characters using `minlength` option.
+//    - Error message: "Provide a password."
+// 5. PasswordConfirm:
+//    - Type: String
+//    - Required: true
+//    - For user to confirm their password during account creation.
+
+// Password Rules:
+// - Simple rule: Password should be at least 8 characters long.
+// - No need for additional rules like symbols or numbers.
+
+// Model Creation:
+// - Define the model as `User` (uppercase to follow conventions).
+// - Use `mongoose.model` to create the User model based on `userSchema`.
+// - Export the model using `module.exports = User;`.
+
+// Next Steps:
+// - In the next video, we'll use this schema to create new users in the database.
+
+
+=========================================================
+================ Creating New Users
+
+// Notes on Authentication Controller and User Signup
+
+// 1. Authentication Controller
+// - User-related actions like creating users, logging in, updating passwords should not go in the userController.
+// - Instead, create a new authController for authentication-related functionality.
+
+// 2. Import User Model
+// - Import the user model from `models/userModel.js` for use in authController functions.
+
+// 3. Signup Function
+// - Create an async function called `signup` for user creation.
+// - This function takes `req`, `res`, and `next` as arguments.
+// - Create a new user using the `User.create()` method with the data from `req.body`.
+
+const newUser = await User.create({
+  name: req.body.name,
+  email: req.body.email,
+  password: req.body.password,
+});
+
+// - Send a response with status 201 and the newly created user.
+
+res.status(201).json({
+  success: true,
+  data: { user: newUser },
+});
+
+// 4. Error Handling
+// - Use `catchAsync` to wrap the async function for error handling, instead of using `try-catch` in each function.
+
+const catchAsync = require('../utils/catchAsync');
+module.exports.signup = catchAsync(async (req, res, next) => {
+  // function logic here...
+});
+
+// 5. Create Route for Signup
+// - Add a `POST` route for `/signup` in `userRoutes` to handle user signup.
+
+router.post('/signup', authController.signup);
+
+// 6. Postman Testing
+// - Test the `/signup` route in Postman by sending a `POST` request with user data in the body.
+  // Example body:
+  {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "password123"
+  }
+
+// 7. MongoDB Collection
+// - After signing up, check the `users` collection in MongoDB to verify the new user is created.
+// - However, passwords should never be stored as plain text. This will be addressed in the next video.
+
+// 8. Security Reminder
+// - Passwords should be hashed before being stored in the database. This will be handled in the next video.
+// - Never store plain text passwords in real-world applications.
+
+=========================================================
+================ Managing Passwords
+
+// Notes: User Password Management and Encryption in the Database
+
+1. **Password Validation**:
+   - Validate if inputted password matches the confirmed password.
+   - Use a custom validator with Mongoose:
+     ```js
+     confirmPassword: {
+       validate: {
+         validator: function(value) {
+           return value === this.password;
+         },
+         message: 'Passwords are not the same.'
+       }
+     }
+     ```
+   - Use `validate` property for custom validation and set a custom error message.
+
+2. **Validation Process**:
+   - The validation will only run on save or create, not on update operations.
+   - For updates, use `save()` instead of `findOneAndUpdate()` to trigger validation.
+
+3. **Handling Duplicate Errors**:
+   - Handle duplicate email errors with proper error messages (e.g., `duplicate key error`).
+   - Example:
+     ```js
+     const user = new User({ email: "test@example.com" });
+     await user.save(); // Will throw a duplicate key error if email exists.
+     ```
+
+4. **Password Encryption (Hashing)**:
+   - **Never store plain text passwords** in the database (important security measure).
+   - Use a **hashing algorithm** like bcrypt for password encryption.
+   - Hashing involves adding a **salt** (random string) to the password for added security.
+   
+   Steps to hash passwords:
+   - Install `bcryptjs`: `npm install bcryptjs`
+   - Example:
+     ```js
+     const bcrypt = require('bcryptjs');
+
+     // Before saving the user, encrypt password if it is modified
+     userSchema.pre('save', async function(next) {
+       if (this.isModified('password')) {
+         this.password = await bcrypt.hash(this.password, 12);
+       }
+       next();
+     });
+     ```
+   - The **pre-save middleware** ensures the password is encrypted before saving to the database.
+   - **Asynchronous method**: Use async/await with the `bcrypt.hash()` method to avoid blocking the event loop.
+
+5. **Hashing Details**:
+   - bcrypt automatically salts the password and applies the hash.
+   - The `12` cost factor is a good balance between security and performance.
+   - Example of `bcrypt.hash()` with a cost factor of `12`:
+     ```js
+     this.password = await bcrypt.hash(this.password, 12);
+     ```
+
+6. **Mongoose Middleware**:
+   - Use Mongoose **pre-save middleware** to perform actions before saving a document.
+   - The middleware runs between receiving data and saving it to the database.
+   - Example middleware:
+     ```js
+     userSchema.pre('save', async function(next) {
+       if (this.isModified('password')) {
+         this.password = await bcrypt.hash(this.password, 12);
+       }
+       next();
+     });
+     ```
+
+7. **Security Considerations**:
+   - Avoid synchronous versions of hashing as they block the event loop.
+   - Use asynchronous `bcrypt.hash()` to handle large-scale hashing without blocking.
+   
+8. **Next Steps**:
+   - After hashing, store the encrypted password in the database.
+   - Validate password confirmation and encryption when creating or saving a new user.
+
+
+=========================================================
+================ How Authentication with JWT Works
+
+
+// Notes: JWT Authentication and Authorization
+
+1. **User Model**: 
+   - Set up to save users with secure passwords.
+   - Next step: Implement user authentication and authorization.
+
+2. **JWT Authentication**:
+   - JWT (JSON Web Tokens) is used for authentication.
+   - JWT is a stateless solution, meaning no need to store session state on the server (perfect for RESTful APIs).
+
+3. **Why JWT over Sessions**:
+   - Storing login state on the server via sessions doesn't align with REST principles of being stateless.
+   - JWT ensures statelessness by keeping the login state on the client (not the server).
+
+4. **JWT Authentication Flow**:
+   - **Login**:
+     - User submits email/username and password in a POST request.
+     - The server checks if the user exists and if the password is correct.
+     - If valid, a unique JWT is created using a secret string stored on the server.
+     - The JWT is sent back to the client and stored (in cookie or local storage).
+     - Server doesn’t know which users are logged in; client knows via JWT (like a passport).
+
+5. **Accessing Protected Routes**:
+   - User sends the JWT along with a request to access protected routes.
+   - The server verifies the JWT’s validity (checks if the data has been tampered with).
+   - If valid, the server sends back requested data. If not, an error message is returned.
+   - Communication must be over HTTPS for security (to prevent interception of passwords/JWT).
+
+6. **JWT Structure**:
+   - JWT is composed of 3 parts:
+     1. **Header**: Metadata about the token.
+     2. **Payload**: Data to encode into the token (no sensitive data, since it's not encrypted).
+     3. **Signature**: A unique signature generated using the header, payload, and server secret.
+     - The signature ensures the data hasn’t been altered.
+
+7. **JWT Verification**:
+   - The server checks if the JWT is valid by recreating the signature using the header, payload, and server secret.
+   - If the recreated signature matches the one in the token, the data is valid, and the user is authenticated.
+   - If the signatures don’t match, it means data has been tampered with, and verification fails.
+
+8. **Security**:
+   - The key to JWT’s security is that only the server has access to the secret to sign the token. 
+   - Even if a third party tries to tamper with the JWT, they cannot create a valid signature.
+
+9. **No Need to Manually Implement JWT**:
+   - The JWT signing/verification algorithms are complex and will not be implemented manually here.
+   - The key takeaway: Understand how JWT works behind the scenes to appreciate its power and simplicity.
+
+10. **Next Steps**:
+   - In the next lecture, we’ll start implementing JWT authentication in the application.
+
+
+=========================================================
+================ Signing up Users
+
+
+// Notes from lecture on implementing user authentication (signup & login)
+
+// 1. Authentication is essential and complex:
+  - Many tutorials oversimplify it.
+  - Authentication is a responsibility, as user data and company trust are at stake.
+  - Mistakes in authentication can have serious consequences.
+
+2. Authentication libraries:
+  - Passport is a popular library for authentication and authorization.
+  - We will implement the login, protection, and authorization logic manually (except JWT).
+  - JWT (JSON Web Token) will handle the signing and verification of tokens.
+
+3. Security flaw in current signup method:
+  - Users can manually set roles like "admin" in signup, which is a security risk.
+  - Solution: only allow specific data (name, email, password) in the signup process.
+
+4. Code fix for the security flaw:
+  - Replace the current code with the following:
+    ```js
+    const { name, email, password } = req.body;
+    const user = new User({ name, email, password });
+    ```
+
+5. Creating an admin:
+  - Admins can't be created through signup; their role must be changed manually in MongoDB Compass after registration.
+
+6. Logging in the user immediately after signup:
+  - After creating a user, the user should be logged in automatically.
+  - Sign a JWT token and send it back to the client.
+
+7. Installing JWT package:
+  - Run `npm install jsonwebtoken` to install the JWT package.
+  - Visit [GitHub JWT documentation](https://github.com/auth0/node-jsonwebtoken) for reference.
+
+8. Using JWT functions:
+  - `sign` function is used to create a new token with payload and secret.
+  - Payload: user ID (avoid storing unnecessary data).
+  - Secret: used to sign the token (must be long and secure).
+  - `verify` function is used to verify the token during login.
+
+9. Writing the token:
+  - Import the JWT package:
+    ```js
+    const jwt = require('jsonwebtoken');
+    ```
+  - Generate the token:
+    ```js
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '90d' });
+    ```
+  - The `expiresIn` option sets an expiration time for the token (90 days in this case).
+
+10. Security best practices:
+  - Secret should be stored in a config file or environment variables (`process.env.JWT_SECRET`).
+  - Use a unique secret for your application (e.g., `my-ultra-secure-and-ultra-long-secret`).
+
+11. Sending the token:
+  - Send the token to the client after successful login:
+    ```js
+    res.json({ token });
+    ```
+
+12. Client-side handling:
+  - The client should store the JWT for future requests (like in localStorage).
+
+13. JWT Debugging:
+  - You can verify the token using [JWT.io Debugger](https://jwt.io/).
+  - The payload contains the user ID, and the signature is created based on the secret and payload.
+  
+// That's it! We've just created the first JWT for the user.
+
+
+=========================================================
+================ Logging in Users
+
+# Notes on User Login Implementation
+
+# The goal of this lecture: Implement login functionality for users with email and password
+
+## Steps:
+1. **Sign a JWT and send it back to the client** when the login credentials are correct (email and password).
+
+2. **Using ES6 Object Destructuring** for extracting values from the request body:
+    - Example: const { email, password } = req.body;
+
+3. **Steps for Login Functionality:**
+    1. Check if both email and password exist.
+    2. Verify if the user exists and if the password is correct.
+    3. If all checks pass, send the JSON web token (JWT) to the client.
+
+4. **Check if email and password are provided:**
+    - If missing, send an error response using the `AppError` class.
+    - Example: new AppError('Please provide email and password', 400);
+
+5. **Import the `AppError` class:**
+    - `const AppError = require('../utils/appError');`
+
+6. **Send response with a fake token for now**:
+    - Example: `res.status(200).json({ status: 'success', token: fakeToken });`
+
+7. **Create the login route in the user router**:
+    - POST request for login credentials (email, password).
+
+8. **Test the login functionality:**
+    - Try sending a request with missing email or password to see the error response.
+    - With valid credentials, return the token.
+
+9. **Remember to return after sending a response:**
+    - This ensures the login process is completed and doesn't cause multiple responses.
+    - Example: `return res.status(200).json({ status: 'success', token: fakeToken });`
+
+10. **Check if the user exists in the database using email:**
+    - `const user = await User.findOne({ email: email });`
+
+11. **Hide passwords in user output:**
+    - Never expose the user's password to the client (even if encrypted).
+    - Use `select: false` to exclude passwords from the output.
+
+12. **Explicitly select the password when checking credentials:**
+    - Use `.select('+password')` to include the password field in the query result.
+
+13. **Use bcrypt to compare the password with the stored hash:**
+    - Compare the entered password with the hashed password stored in the database using bcrypt.
+
+14. **Create an instance method in the user model to compare passwords:**
+    - Define method `correctPassword(candidatePassword)` on the user schema.
+    - Example: `userSchema.methods.correctPassword = async function (candidatePassword) {...}`
+
+15. **Security Consideration:**
+    - Always use bcrypt for comparing passwords to prevent exposing sensitive data.
+
+=========================================================
+================ Protecting Tour Routes - Part 1
+
+// Notes on Protecting Routes with JWT Authentication:
+
+// 1. Introduction to Protecting Routes
+// ----------------------------------
+// - We have already implemented login with JWT creation (authentication).
+// - Next step: Protecting routes using the generated JWT for logged-in users.
+
+// 2. Protecting a Route
+// ---------------------
+// - Example: Protect the "getAllTours" route.
+// - The goal: Only logged-in users should access this route.
+
+// 3. Middleware for Protected Routes
+// ----------------------------------
+// - A middleware will be used to check if the user is logged in before accessing the route.
+// - If not logged in, return an error; if logged in, proceed to the next middleware (the route handler).
+
+// 4. Creating the Middleware
+// --------------------------
+// - We'll create a `protect` middleware function in the `authController`.
+
+// 5. Protect Middleware
+// ---------------------
+// - The `protect` middleware will be added before the route handler.
+// - If the user is not authenticated, it will trigger an error, blocking access to the route.
+
+// 6. Code Implementation: 
+// -----------------------
+
+// Step 1: Create the "protect" middleware function.
+// - Use `catchAsync` to handle async functions.
+
+const protect = catchAsync(async (req, res, next) => {
+    // Middleware logic goes here.
+    next(); // Placeholder for now.
+});
+
+// Step 2: Attach the middleware to the route.
+// - In this case, we protect the "getAllTours" route.
+const authController = require('../controllers/authController');
+router.get('/all-tours', authController.protect, getAllTours);
+
+// 7. Explanation of Protect Middleware Logic
+// -----------------------------------------
+// - First, we need to verify if the user is logged in by checking the token.
+// - The steps for the `protect` middleware:
+//   - Get the token (check if it's provided in the headers).
+//   - Validate the token (check if the signature is correct).
+//   - Check if the user still exists in the database.
+//   - Check if the user changed their password after the JWT was issued.
+
+// 8. Implementing Token Validation
+// -------------------------------
+// - A common way to send a token is through the "Authorization" header (using the "Bearer" keyword).
+
+// Example of setting the header in Postman:
+// Authorization: Bearer <token>
+
+// - In Express, we access the headers via `req.headers.authorization`.
+
+// 9. Getting the Token from the Header
+// ------------------------------------
+// - Extract the token by splitting the header value at the space (i.e., "Bearer <token>").
+
+// Example code for extracting the token:
+let token;
+if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1]; // Get the second part of the header.
+}
+
+// 10. Verifying the Token
+// -----------------------
+// - If no token is provided, send an error (401 Unauthorized).
+// - If the token is valid, continue with the next middleware or route handler.
+
+// Example of handling missing token:
+if (!token) {
+    return res.status(401).json({ message: 'You are not logged in. Please log in to get access.' });
+}
+
+// 11. Test Case: 
+// --------------
+// - If no token is sent, the middleware will trigger the error and deny access.
+// - If a token is sent but it's invalid, verification should fail, and access should be denied.
+
+// Recap:
+// - We’ve implemented the basic structure for the `protect` middleware to guard routes.
+// - In this video, we've only covered getting the token and checking if it exists.
+// - The next step: Implement token validation and checking for a valid user.
+
+// 12. Conclusion
+// --------------
+// - So far, we’ve completed protecting routes by checking if a token is sent and handling errors when it’s missing.
+// - Next: We'll implement token verification to ensure the token hasn't been tampered with and is valid.
+
+
+
+=========================================================
+================ Protecting Tour Routes - Part 2
+
+// 1. Recap from Last Lecture:
+//    - We read the token from the authorization header.
+//    - Checked if the token exists.
+
+// 2. Token Verification
+//    - Verifying the token checks if someone tampered with the data or if the token has expired.
+
+// 3. Using jwt.verify to verify the token
+//    - jwt.verify(token, process.env.JWT_SECRET, callback)
+//    - The process.env.JWT_SECRET is used to verify the signature of the token.
+
+// 4. Promisifying jwt.verify
+//    - jwt.verify is asynchronous, so we’ll use async/await to handle it.
+//    - Node provides util.promisify to convert callback-based functions to promise-based.
+//    - We’ll destructure promisify from util and use it for jwt.verify.
+
+const { promisify } = require('util');
+
+// Example of using promisify and async/await:
+const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+// 5. Log the decoded data to check if it's working
+//    - We can log the decoded data to verify it includes the correct user ID and timestamps.
+
+console.log(decoded);
+
+// 6. Handle Errors: 
+//    - If the payload is manipulated, jwt will throw a JsonWebTokenError with the message 'invalid signature'.
+//    - If the token is expired, it throws a TokenExpiredError.
+
+try {
+  // Verification logic here
+} catch (error) {
+  if (error.name === 'JsonWebTokenError') {
+    res.status(401).send('Invalid token, please log in again');
+  } else if (error.name === 'TokenExpiredError') {
+    res.status(401).send('Your token has expired. Please log in again');
+  }
+}
+
+// 7. Fix Expiration Time
+//    - Ensure the token expiration time is set correctly (default 90 days).
+
+
+// 8. Explanation of JWT Token Process:
+//    - Log the token manually, copy it, and paste it into the header for authentication.
+//    - This manual process will be automated in future videos to handle token extraction automatically.
+//    - We can remove unnecessary console logs now, as everything is working.
+
+// 9. Security Check: Handle User Deletion and Password Change
+//    - Token can still exist even if the user has been deleted or changed their password.
+//    - We should verify the existence of the user and check if the password has changed after token issuance.
+
+const freshUser = await User.findById(decoded.id); // Check if user exists
+if (!freshUser) {
+  return next(new Error('User no longer exists', 401)); // If no user, return error
+}
+
+// 10. Token Verification Recap:
+//    - After token is verified, we can be certain that the ID belongs to a valid user.
+//    - The verification step ensures no one has tampered with the user ID inside the token.
+
+// 11. Handle User Deletion:
+//    - After the token verification, if the user doesn't exist anymore, return an error.
+
+try {
+  const freshUser = await User.findById(decoded.id);
+  if (!freshUser) {
+    return res.status(401).send('User no longer exists');
+  }
+} catch (error) {
+  next(error);
+}
+
+// 12. Testing Deletion and JWT Security:
+//    - We create a new user, login, generate a token, and delete the user to simulate the scenario of a stolen token.
+  
+// 13. Handle Password Change After Token Issuance
+//    - If the user changes the password after token issuance, we want to invalidate the token.
+
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (!this.passwordChangedAt) return false; // If no password change date, return false
+
+  const changedTimestamp = this.passwordChangedAt.getTime() / 1000; // Convert to seconds
+  return changedTimestamp > JWTTimestamp;
+};
+
+// 14. Add a Field for Password Change Date
+//    - Create a field `passwordChangedAt` to store the date of the last password change.
+
+const userSchema = new mongoose.Schema({
+  passwordChangedAt: { type: Date },
+  // other fields...
+});
+
+// 15. Log and Compare Password Change Date with JWT Timestamp
+//    - Log both the `passwordChangedAt` date and the JWT issue timestamp (decoded.iat) to check the comparison.
+
+console.log(this.passwordChangedAt, JWTTimestamp);
+
+// 16. Test User Creation with Password Change Date
+//    - Create a user and manually set `passwordChangedAt` to test the password change check.
+
+const newUser = await User.create({
+  username: 'testUser',
+  passwordChangedAt: new Date('2019-04-30T00:00:00Z'), // Set a date for testing
+});
+
+// 17. Final Comparison for Step 4: Checking if Password Changed After JWT
+//    - After decoding the JWT, compare the `passwordChangedAt` timestamp with the JWT issued timestamp.
+
+const changedTimestamp = this.passwordChangedAt.getTime() / 1000;
+const JWTTimestamp = decoded.iat; // JWT issued timestamp
+
+if (changedTimestamp > JWTTimestamp) {
+  // User changed password after token issuance; invalidate token.
+  return next(new Error('Password was changed after the token was issued', 401));
+}
+
+// 18. Final Testing and Debugging
+//    - Test the scenario by deleting the user after generating the JWT token to see if it's blocked correctly.
+
+// Notes on implementing route protection in a Node.js/Express app:
+
+// 19. Parsing a string to an integer:
+parseInt("string", 10); // Specify the base as 10 (base 10 number system)
+
+// 20. Comparing timestamps to check if password was changed after token was issued:
+    // If token was issued before password change (time 100) and password changed after (time 200), it's "true" (changed).
+    // If token was issued after password change (time 300), it's "false" (not changed).
+    // We use the less-than sign (<) to check if the token's issued time is before the change.
+
+
+// 21. Handling the scenario when the password has changed:
+    // If password was changed after the token was issued:
+        // Return an error with the message: "Please log in again." (Code: 401).
+    // This is because the token is no longer valid due to the password change.
+
+
+// 22. If no changes detected (everything is correct), move to the next route handler:
+    // Use "next()" to pass control to the next middleware function or route handler.
+    // The "next" function allows access to the protected route.
+
+
+// 23. Assigning user data to the request object:
+    // Attach the fresh user to the request object: req.user = freshUser;
+    // This makes the user data available to future middleware functions.
+
+
+// 24. Testing the token's validity:
+    // Example:
+        // The password change is set to a date in the future for testing.
+        // The token should work if issued after the password change.
+        // If the token is issued before the password change, return the error: "User recently changed password, please log in again."
+
+
+// 25. Recap of the implemented route protection logic:
+    // - Token verification: Ensures that the token has not been tampered with by third parties.
+    // - Retrieve current user: Based on the decoded token's ID.
+    // - Check password change timestamp: Ensure the token is valid and has not been issued before the password change.
+    // - Grant access if everything checks out, otherwise trigger an error.
+    // - Use the request object to pass user data between middleware functions.
+
+
+// 26. Key takeaway: This is a comprehensive and secure method for protecting routes based on JWT and password change events.
+// It ensures only valid tokens are accepted and grants access to the protected routes accordingly.
+
+
+=========================================================
+================ Advanced Postman Setup
+
+
+// Notes on Advanced Postman Setup:
+
+1. **Environment Setup in Postman:**
+   - Environments represent contexts where the app is running.
+   - Can specify variables for different environments (e.g., development, production).
+   - Initially, Postman shows "no environment" at the top because we haven't created one yet.
+   
+2. **Creating an Environment:**
+   - Create an environment called "depth" for development (e.g., "depth" for Naters).
+   - Add a variable called `URL` to change the environment-specific URLs.
+   
+3. **Setting up URL for Development:**
+   - For development, set the URL to `http://127.0.0.1:3000` (localhost).
+   - For production (for now, use a placeholder) set it to `Naters.io`.
+   
+4. **Using Environment Variable:**
+   - In Postman request, replace hardcoded URL with the environment variable using curly braces: `{{URL}}`.
+   - After selecting the "depth" environment, the variable will be replaced with the URL.
+
+5. **Benefits of Using Environments:**
+   - Switching environments avoids manually changing URLs in every request.
+   - Very useful when working with APIs in both development and production.
+   - Saves time, especially in large projects with many endpoints.
+
+6. **Applying URL Variable Across Multiple Requests:**
+   - Update all requests to use the `{{URL}}` variable for API endpoints.
+   - Saves time and ensures consistency across requests.
+   
+7. **Programmatically Setting Environment Variables (JWT Example):**
+   - Use the "Test" tab to programmatically set environment variables.
+   - Example: After signing up, use the token received in the response and set it in the environment using Postman code:
+     ```js
+     pm.environment.set("JWT", pm.response.json().token);
+     ```
+   - This allows us to reuse the JWT for future requests without manual copying.
+
+8. **Sending Authorization with Bearer Token:**
+   - For protected routes, in the "Authorization" tab, select "Bearer Token".
+   - Use `{{JWT}}` to dynamically insert the token from the environment.
+   - This makes it easier to test routes that require authentication.
+
+9. **Testing Authentication with JWT Token:**
+   - Sign up or log in to get the JWT.
+   - Check the token in the environment (e.g., `depth`).
+   - For protected routes, add `Authorization: Bearer {{JWT}}` to the request header.
+
+10. **Handling Login and Signup for JWT:**
+    - Both login and signup should store the JWT token for use in further requests.
+    - Ensure the environment variables for JWT are set properly after both signup and login.
+
+11. **Benefits:**
+    - This method of using environment variables significantly simplifies the process of testing APIs with authentication.
+    - Saves time, especially when adding new protected routes.
+    - No need to manually handle tokens every time.
+
+
+
+=========================================================
+================ Authorization_ User Roles and Permissions
+
+### Notes from Video: Implementing Authorization in Project
+
+- **Authentication vs Authorization**:
+  - Authentication = Logging a user in.
+  - Authorization = Checking if a user has permission to perform specific actions (e.g., deleting a tour).
+  
+- **Scenario**: 
+  - Not all logged-in users should be allowed to delete a tour. Only certain roles (e.g., admins) should have this permission.
+  - Authorization checks ensure that only specific roles can interact with certain resources.
+
+- **Authorization Workflow**:
+  - After authentication (checking if the user is logged in), implement authorization to check if the logged-in user can perform the action (e.g., delete a tour).
+  - Middleware will be used to restrict actions based on user roles.
+
+- **Step 1**: Add middleware to restrict actions on certain routes:
+  - Example: Deleting a tour should only be allowed by admins.
+  - **Middleware Stack**:
+    1. **authController.protect** - Checks if the user is logged in.
+    2. **authController.restrictTo** - Restricts access to specific roles, such as "admin".
+
+- **Step 2**: User roles:
+  - Default roles: `user`, `tour guide`, `lead tour guide`, `admin`.
+  - Roles are specific to the application. For instance, a community app might have roles like `moderator` or `contributor`.
+  
+- **Step 3**: Add roles to the User Model:
+  - Define user roles in the model (e.g., `user`, `tour guide`, `lead tour guide`, `admin`).
+  - Use an enum validator to restrict role values to specific ones.
+  - Set a default role (`user`) for new users.
+
+- **Step 4**: Implement `restrictTo` Middleware:
+  - The function will check if the current user's role is included in the allowed roles.
+  - Use the **rest parameter syntax** to pass in multiple roles into the `restrictTo` function.
+
+- **Step 5**: Role-based Access Control (RBAC):
+  - Check if the user's role matches one of the roles passed into the `restrictTo` function.
+  - If the role is not found, return an error (403: Forbidden).
+
+- **Code Implementation**:
+  - Create a `restrictTo` function that wraps the middleware function.
+  - Inside the `restrictTo` function:
+    - Check if the current user's role (`req.user.role`) is in the array of allowed roles.
+    - If the role is not found, respond with a 403 error ("You do not have permission to perform this action").
+  - If the role is found, call `next()` to pass the request to the next middleware.
+
+- **Step 6**: Test Authorization:
+  - Use **JWT** tokens to test authorization with a regular user and an admin.
+  - Example: Regular user should not be able to delete a tour (403 error), but an admin should have permission (success).
+  
+- **Important Concepts**:
+  - The user's role is stored in `req.user.role` after the `protect` middleware.
+  - Authorization checks are performed after authentication.
+
+- **Testing**:
+  - Log in as a regular user (non-admin) and try to delete a tour: Should get a 403 error.
+  - Log in as an admin and try to delete a tour: Should be able to delete the tour.
+
+- **Conclusion**:
+  - Authorization ensures only users with appropriate roles can perform certain actions.
+  - This approach is essential for protecting routes that require specific user permissions.
+
+=========================================================
+================ Password Reset Functionality_ Reset Token
+
+// Notes on implementing Password Reset Functionality
+
+// 1. Introduction to Password Reset Functionality
+// - User-friendly password reset is common in most web applications.
+// - Typically, user provides email, receives a link to reset password.
+// - We will implement this process in two steps: 
+//    1. Sending a reset token via email after POST request with email.
+//    2. User uses the reset token to update the password in the next video.
+
+// 2. Implementing the Routes
+// - We need two routes: 
+//    1. `forgotPassword` - Receives only the email address.
+//    2. `resetPassword` - Receives both the reset token and the new password.
+// - These will be added to the user routes file.
+
+// 3. Steps for `forgotPassword` Route
+//    - 1. Get the user based on the email posted.
+//    - 2. Generate a random token.
+//    - 3. Send the token back via email.
+
+// 4. Example Code for `forgotPassword` Route
+async function forgotPassword(req, res, next) {
+    const email = req.body.email;
+    
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+        return next(new Error("No user with that email address"), 404);
+    }
+    
+    // Generate password reset token
+    const resetToken = user.createPasswordResetToken();
+    
+    // Save the updated user data
+    await user.save();
+
+    // Log for debugging
+    console.log("Reset Token: ", resetToken);
+    console.log("Encrypted Token: ", user.passwordResetToken);
+    
+    // Placeholder: Send email (to be done in the next video)
+    // sendResetEmail(user.email, resetToken);
+}
+
+// 5. Creating the Reset Token
+// - Use Mongoose instance method to generate the random reset token.
+// - Token should be a simple random string (not a JWT).
+// - Store the encrypted version of the token in the database to prevent misuse.
+// - Store token expiration time (10 minutes).
+
+// 6. Using Node.js Crypto to Generate Token
+const crypto = require("crypto");
+function createPasswordResetToken() {
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // Encrypt the token before saving it to the database
+    const encryptedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    // Set encrypted token and expiration time (10 minutes)
+    this.passwordResetToken = encryptedToken;
+    this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes in ms
+
+    // Return the plain reset token to be sent in the email
+    return resetToken;
+}
+
+// 7. Saving the Reset Token
+// - Save encrypted reset token and expiration time to the database.
+// - Ensure the user document is saved with updated token and expiration.
+
+user.passwordResetToken = encryptedToken;
+user.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+await user.save();
+
+// 8. Handling Mongoose Validation
+// - When saving a document, sometimes we skip validations (e.g., missing required fields).
+// - Use `validateBeforeSave: false` to disable validation temporarily.
+
+await user.save({ validateBeforeSave: false });
+
+// 9. Debugging and Testing
+// - During testing, check if the reset token is being generated correctly.
+// - Ensure the encrypted token is saved in the database, but not the plain token.
+// - Check expiration time of the reset token (should be 10 minutes from now).
+
+console.log("Reset Token: ", resetToken);
+console.log("Encrypted Token: ", user.passwordResetToken);
+console.log("Expiration Time: ", user.passwordResetExpires);
+
+// 10. Next Steps
+// - In the next video, we'll send the reset token via email to the user.
+// - Separate video will be dedicated to sending emails using Node.js.
+// - Final step will be to implement the password update functionality using the token.
+
+
+=========================================================
+================ Sending Emails with Nodemailer
+
+// Notes from the lecture on sending password reset emails using Nodemailer
+
+1. **Password Reset Token Handling**:
+   - Need to send password reset token via email to the user.
+   - The email will be sent using **Nodemailer**, a popular Node.js package.
+
+2. **Validation of Form**:
+   - Issue arises when the "confirm password" field is empty.
+   - Error message displayed: "Please confirm your password."
+
+3. **Creating Email Handler**:
+   - Create an email handler function inside `utilities/email.js`.
+   - The handler will handle sending emails across the app.
+
+4. **Installing Nodemailer**:
+   - Use **npm install nodemailer** to install the package.
+
+5. **Email Handler Function**:
+   - Define function `sendEmail` with options (email address, subject, content).
+   - Steps to send email:
+     1. **Create Transporter**: Configures service for sending email.
+     2. **Define Email Options**: Set recipient, subject, and message.
+     3. **Send Email**: Use `transporter.sendMail()` to send the email.
+
+6. **Transporter Configuration**:
+   - Example of using Gmail as email service.
+     - **nodemailer.createTransport()** to create a transporter.
+     - Define service (e.g., Gmail, Yahoo, etc.), authentication (user/password), and configuration.
+
+7. **Gmail Configuration**:
+   - Gmail can be used, but for production apps, it's not recommended.
+   - Gmail allows only 500 emails/day and can mark you as spam if overused.
+   - For production, use services like **SendGrid** or **Mailgun**.
+   
+8. **Alternative Development Service: Mailtrap**:
+   - Use **Mailtrap.io** to simulate sending emails in development.
+   - Sign up for Mailtrap, create an inbox, and get credentials (host, port, username, password).
+   - Use these credentials in Nodemailer instead of Gmail.
+
+9. **Configuration for Mailtrap**:
+   - Define the configuration in the `.env` or `config.js` file.
+   - Set host and port for Mailtrap.
+
+10. **Email Options Object**:
+    - Options include sender's name and email, recipient's address, subject, and text content.
+    - Optionally include HTML content for emails, but text only for now.
+    - `sendEmail` function handles both the email creation and sending process.
+
+11. **Sending Email**:
+    - Call `await sendEmail()` to send the email asynchronously.
+    - Pass options like user email, subject (password reset), and message content.
+    - **Response**: Once email is sent, return a response confirming the action.
+
+12. **Reset URL**:
+    - Define reset URL for user to click and reset password.
+    - Example of URL: `https://your-app-url.com/resetPassword/{resetToken}`.
+    - Use `PATCH` method to modify the password in the user document.
+
+13. **Reset URL Construction**:
+    - URL includes protocol (HTTP or HTTPS), host, version, and token.
+    - Construction for both **development** and **production** environments.
+
+14. **Creating Reset Message**:
+    - Email message instructs the user to submit a PATCH request with new password and password confirmation.
+    - "If you didn’t forget your password, ignore this email."
+
+15. **Implementation**:
+    - Once email options and reset URL are set, use `await sendEmail()` to trigger the email sending.
+    - Ensure that the email is sent to the correct recipient and contains the proper reset instructions.
+
+16. **Notes on Asynchronous Handling**:
+    - The email function uses async/await for handling the email sending process.
+    - Await the email function before sending a response to the client.
+
+
+=========================================================
+================ Password Reset Functionality_ Setting New Password
+
+// Password Reset Functionality - Step-by-step Notes
+
+1. **Get user based on the reset token**:
+   - First, extract the token from the URL (`req.params.token`).
+
+2. **Encrypt the reset token to compare with the database token**:
+   - Use `crypto.createHash('sha256').update(token).digest('hex')` to hash the token from the URL.
+   - This hashed token will be compared with the one stored in the database.
+
+3. **Find user by the hashed token**:
+   - Use `User.findOne({ passwordResetToken: hashedToken })` to query the database.
+   - Ensure that the query also checks if the reset token has not expired by comparing `passwordResetExpires` with the current date:
+     ```js
+     passwordResetExpires: { $gt: Date.now() }
+     ```
+
+4. **Handle errors**:
+   - If no user is found or the token has expired, return an error:
+     ```js
+     if (!user) {
+         return next(new AppError('Token is invalid or has expired', 400));
+     }
+     ```
+
+5. **Set the new password**:
+   - If the token is valid, set the new password:
+     ```js
+     user.password = req.body.password;
+     user.passwordConfirm = req.body.passwordConfirm;
+     ```
+   - Remove the reset token and expiration:
+     ```js
+     user.passwordResetToken = undefined;
+     user.passwordResetExpires = undefined;
+     ```
+
+6. **Save the user document**:
+   - Use `await user.save()` to update the user with the new password and remove the reset data.
+   - This will automatically run any password validation and encryption logic.
+
+7. **Log the user in**:
+   - Generate and send a JSON Web Token to the client after password reset:
+     ```js
+     const token = createSendToken(user, 200);
+     ```
+
+8. **Test the reset flow**:
+   - Use Postman to test the password reset process:
+     - First, hit the "Forget Password" route to receive the token.
+     - Use the token in the "Reset Password" route, and specify the new password and password confirmation.
+     - Ensure validation for password confirmation and length works.
+   
+9. **Password confirmation validation**:
+   - If passwords do not match, an error message should be returned:
+     ```js
+     Passwords are not the same!
+     ```
+
+10. **Check for successful reset**:
+    - If successful, the new token should be valid, and the expired reset token and expiration date should no longer be in the user document.
+
+11. **Update the passwordChangedAt property**:
+    - Use Mongoose middleware to set `passwordChangedAt` when the password is updated:
+      ```js
+      userSchema.pre('save', function(next) {
+          if (!this.isModified('password') && !this.isNew) return next();
+          this.passwordChangedAt = Date.now();
+          next();
+      });
+      ```
+
+12. **Handle edge case with token timing**:
+    - The token might be generated before the `passwordChangedAt` timestamp is saved. To fix this, subtract 1 second from the token creation time when comparing.
+    - This ensures that the user can always log in using the new token, even if there's a slight delay between password change and token creation.
+
+
+=========================================================
+================ Updating the Current User_ Password
+
+// Notes on implementing the "update password" functionality for logged-in users
+
+// 1. Introduction
+- We already allowed users to reset their password, but now we want to allow logged-in users to directly update their password without going through the reset process.
+- This update will be done in the authentication controller: `authController.updatePassword`
+
+// 2. Steps to Implement:
+- The functionality is for logged-in users only.
+- The user must provide their current password to confirm their identity. This is important for security:
+  - Imagine a scenario where someone gets unauthorized access to your computer and updates passwords for active sessions without needing to re-authenticate.
+
+// 3. High-Level Steps:
+1. Get the user from the collection (from the database).
+2. Check if the provided password matches the current password.
+3. If the password is correct, update the user's password.
+4. Log the user in again and send back a JWT with the new password.
+
+// 4. Key Considerations:
+- Always ask for the current password before updating, as a security measure.
+- You cannot use `User.findByIdAndUpdate()` because:
+  - Validation middleware won’t work.
+  - The password won’t be encrypted if you do it that way.
+  - The `passwordChangedAt` timestamp won’t be set correctly.
+
+
+// 5. Code Structure:
+- We use `User.findById` to fetch the user and validate their identity.
+- Check the password using `user.correctPassword()`.
+- If the password is correct, update it and save the new password with `user.save()`.
+- Use the `catchAsync()` function to handle asynchronous errors.
+
+
+// 6. Error Handling:
+- If the password is incorrect, throw an error (`new AppError("Your current password is wrong", 401)`).
+
+
+// 7. Refactor to Avoid Repetition:
+- The login functionality for sending JWT is repeated multiple times. So, refactor it into a reusable function, `createAndSendToken()`, that takes the user and response parameters.
+
+// 8. Updating Password Flow:
+- Define a PATCH route in `userRouter` for the password update: `router.patch("/updateMyPassword")`.
+- Use `authController.protect` middleware to ensure only logged-in users can update their password.
+- The body of the request will contain:
+  - `passwordCurrent` (current password)
+  - `password` (new password)
+  - `passwordConfirm` (confirm new password)
+
+
+// 9. Testing:
+- Test the route by sending the current password, new password, and password confirmation fields.
+- Handle validation errors like mismatched passwords correctly.
+- Confirm that the password is updated and the timestamp is correctly set.
+  
+// 10. Implementation of Create and Send Token Function:
+- Create a function `createAndSendToken(user, statusCode, res)` to handle sending the JWT and user information.
+- Replace the redundant code for sending tokens with this function.
+
+
+// 11. Conclusion:
+- With these steps, you can securely implement a password update feature for logged-in users. 
+- The next step will be to implement updating other user details like email.
+
+
+=========================================================
+================ Updating the Current User_ Data
+
+// Notes from Video Lecture: User Data Update Implementation
+
+1. **Purpose of the Lecture:**
+   - Enable logged-in users to update their own data.
+   - Moving beyond authentication, focusing on real user data manipulation.
+
+2. **Approach:**
+   - Implement the update functionality in the `userController`.
+   - Create a new handler function called `updateMe` for updating the currently authenticated user's data.
+   - Another handler `updateUser` will be implemented later for admin to update any user's data.
+
+3. **Steps to Follow:**
+   - **Step 1:** If the user tries to update their password, return an error (as updating the password is done separately).
+   - **Step 2:** If no password data is present, update the user's data (name, email, etc.).
+
+4. **Error Handling:**
+   - When the user includes password data in the request body, an error will be triggered:
+     - `AppError` with a message: `"This route is not for password updates. Please use /updateMyPassword."`
+   - Return a `400` status for bad requests.
+
+5. **Route Setup:**
+   - **Route:** `PATCH /updateMe`
+   - **Middleware:** Protected route (only authenticated users can access).
+   - The `request.user` ID will be securely used to identify the user (set by the `protect` middleware, using JWT).
+
+6. **Testing the Error:**
+   - Send a request with password data in the body to trigger the error.
+   - Test authentication (ensure only logged-in users can update their data).
+
+7. **Updating User Data:**
+   - Avoid using `user.save()` due to required fields (like passwordConfirm) that aren't being updated.
+   - Use `findByIdAndUpdate` instead:
+     - Pass the user ID, data to update, and options (`new: true`, `runValidators: true`).
+     - This ensures the updated object is returned and validated.
+
+8. **Handling Body Data:**
+   - Filter the request body to only include allowed fields (name, email).
+   - Prevent malicious fields (like role or passwordConfirm) from being passed into the update query.
+   - Create a function `filterObj` to filter out unwanted fields.
+
+9. **Function to Filter Object:**
+   - `filterObj`: Filters an object to only allow specific fields.
+     - Loop through object keys using `Object.keys()` and check if the key is in the allowed fields array.
+     - Create a new object with only the allowed fields.
+
+10. **Code Example:**
+   ```js
+   // Example of filtering user data:
+   const filterObj = (obj, ...allowedFields) => {
+     const newObj = {};
+     Object.keys(obj).forEach((el) => {
+       if (allowedFields.includes(el)) {
+         newObj[el] = obj[el];
+       }
+     });
+     return newObj;
+   };
+
+
+11. Final Steps:
+    - After filtering, update the user document in the database.
+    - Send the updated user data back in the response.
+
+12. Conclusion:
+    - This method ensures that only the allowed fields (like name and email) can be updated by the user.
+    - Additional fields like password or role are excluded for security reasons.
+
+=========================================================
+================ Deleting the Current User
+
+// Notes on Deleting User Account (Marking as Inactive Instead of Deleting)
+
+// Overview:
+// - When a user decides to delete their account, we don't actually delete the document from the database.
+// - Instead, we set the account to inactive so the user can reactivate it later or we can still access it.
+
+// 1. Add `active` field to User Schema:
+// - Add a new Boolean field `active` to the schema.
+// - Default value should be `true` (indicating the user is active).
+// - Set `select` to `false` to hide this field from the output.
+
+// Example:
+const userSchema = new mongoose.Schema({
+  active: {
+    type: Boolean,
+    default: true,
+    select: false // Don't show in the output
+  }
+});
+
+// 2. Delete User (Mark as Inactive):
+// - To delete a user, we only update the `active` field to `false`.
+// - We don't remove the user from the database.
+
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false });
+  res.status(204).send(); // Send 204 response to indicate success but no data
+});
+
+// 3. Setup Route for `deleteMe`:
+// - Add the route for `deleteMe` using the DELETE HTTP method.
+
+router.delete('/deleteMe', protect, deleteMe);
+
+// 4. Sending Response:
+// - Return HTTP status 204 (No Content) to indicate that the deletion was successful,
+//   but no content needs to be sent back to the client.
+
+// 5. Handling User Queries:
+// - Use query middleware to ensure inactive users aren't returned in queries.
+// - Add the query middleware to check for the `active` field when fetching users.
+
+userSchema.pre(/^find/, function(next) {
+  this.find({ active: { $ne: false } }); // Filter out inactive users
+  next();
+});
+
+// 6. Testing Deletion:
+// - After marking a user as inactive, check if the `active` field is correctly set to `false`.
+// - The `active` field won't be shown to the user in responses, but you can verify it in the database.
+
+// 7. Update Query to Ensure Active Users Only:
+// - Modify queries to include a check for the `active` field to ensure inactive users aren't shown.
+
+User.find({ active: { $ne: false } });
+
+// 8. Security Considerations:
+// - Marking a user as inactive instead of deleting ensures data integrity.
+// - This approach is part of authentication and authorization, ensuring only authenticated users can delete their accounts.
+
+// Key Points:
+// - Instead of deleting users, mark them as inactive by setting the `active` field to `false`.
+// - Use query middleware to filter out inactive users from query results.
+// - Protect routes to ensure only authenticated users can delete their accounts.
+
+
+=========================================================
+================ Security Best Practices
+
+// Notes on Security Best Practices and Preventing Common Attacks
+
+// Overview:
+// - We’re securing the application and user data as best as possible.
+// - We've discussed some best practices already, and now we'll summarize them for clarity.
+
+// Key Practices Implemented:
+// - Encrypt passwords and reset tokens to protect against database compromise.
+// - Slow down login attempts with bcrypt to prevent brute force attacks.
+// - Implement rate limiting and restrict failed login attempts.
+// - Store JWTs in HTTP-only cookies to avoid Cross-Site Scripting (XSS) attacks.
+// - Sanitize user input and set proper HTTP headers for security.
+// - Implement denial-of-service protection with rate limiting and data limits.
+// - Prevent NoSQL query injection by using Mongoose and sanitizing inputs.
+
+// 1. Protecting Against Compromised Database:
+// - Always encrypt passwords and reset tokens to prevent attackers from accessing sensitive data.
+// - This prevents attackers from resetting passwords or stealing user data even if they access the database.
+
+// 2. Brute Force Attack Prevention:
+// - Attackers may try millions of passwords to guess the correct one.
+// - Slow down login attempts using bcrypt, which adds delay during password checks.
+// - Implement rate limiting to restrict requests from the same IP.
+// - Optionally, set a max number of failed login attempts (e.g., after 10 failed attempts, block for 1 hour).
+
+// 3. Cross-Site Scripting (XSS) Protection:
+// - XSS attacks allow attackers to inject scripts into the page.
+// - On the client side, this is dangerous because it allows access to local storage.
+// - Always store JWTs in HTTP-only cookies, making it impossible for attackers to access or steal the token.
+// - Sanitize user input and set special HTTP headers to reduce the risk of XSS attacks.
+
+// 4. Denial-of-Service (DoS) Attacks:
+// - Attackers may overwhelm the server with requests, causing it to crash.
+// - Rate limiting requests is essential to prevent this type of attack.
+// - Limit the amount of data that can be sent in POST/PATCH requests to prevent server overload.
+// - Avoid using inefficient regular expressions that could cause the server to hang.
+
+
+// 5. NoSQL Query Injection Protection:
+// - Query injection allows attackers to input malicious queries that modify data or bypass security.
+// - Mongoose helps protect against this by enforcing a defined schema for data.
+// - Still, it's a good practice to sanitize user inputs to be sure.
+
+// 6. Best Practices for Authentication and Authorization:
+// - Use HTTPS for all communications between server and client to prevent interception of sensitive data (like JWT).
+// - Use randomly generated password reset tokens, and set expiry dates for them.
+// - Revoke JWTs after password changes to ensure that old tokens are no longer valid.
+// - Never commit sensitive configuration files (e.g., environment variables) to version control like Git.
+
+// 7. Additional Security Enhancements:
+// - Don't send detailed error messages to the client. Stack traces could provide attackers valuable insights into the system.
+// - Use the `csurf` package to prevent Cross-Site Request Forgery (CSRF) attacks, which can trick authenticated users into executing unwanted actions.
+// - Require re-authentication for sensitive actions, like making payments or deleting content.
+// - Implement a blacklist for untrusted tokens, ensuring tokens used in malicious actions are flagged and rejected.
+
+// 8. Optional Security Features to Consider:
+// - Email confirmation after account creation (to verify ownership and ensure valid users).
+// - Refresh tokens to maintain user sessions, so they don’t need to log in again after the JWT expires.
+// - Two-factor authentication (2FA) for an extra layer of security by requiring a second action (like entering a code sent to a mobile phone) after login.
+
+// 9. Preventing Parameter Pollution:
+// - We’ll implement measures to handle and prevent parameter pollution, where multiple instances of the same parameter can lead to errors or unexpected behavior.
+
+
+// Conclusion:
+// - We’ve covered key strategies to secure the application and prevent common attacks.
+// - Implementing these best practices will ensure the safety of the application and user data.
+
+// Next Step:
+// - We’ll continue with more security implementations in upcoming sections.
+
+
+=========================================================
+================ Sending JWT via Cookie
+
+
+// Notes on Creating and Sending JWT as HTTP-only Cookie
+
+// Last lecture: JWT should be stored in a secure HTTP-only cookie, not just as a string in JSON response.
+
+// We are currently sending the JWT as a string, but now we want to send it as a cookie.
+
+// We're working in the authController and specifically the createSendToken function.
+
+// Recap on cookies:
+// A cookie is a small piece of text sent by a server to the client. 
+// The browser stores the cookie and sends it with every future request to the same server.
+// This is useful when we want the browser to send the token automatically with each request in the future.
+
+// Note: While we're testing in Postman, the cookie functionality isn't critical yet.
+// Later, when rendering dynamic webpages, sending cookies with requests becomes important.
+
+// How to send a cookie:
+// Use `res.cookie` to send a cookie with the response.
+// Syntax: `res.cookie(name, value, options)`
+// - Name: "JSON web token" (cookie name)
+// - Value: The JWT token
+// - Options: Defines how the cookie behaves.
+
+// Set cookie expiration (expires in 90 days):
+// Use JavaScript's Date() to set expiration time (90 days from now).
+const jwtCookieExpiresIn = 90;  // 90 days
+let cookieExpirationDate = new Date(Date.now() + jwtCookieExpiresIn * 24 * 60 * 60 * 1000);  // Converts 90 days to milliseconds
+
+// Cookie options:
+// 1. `expires`: Sets the cookie expiration time
+// 2. `secure`: Makes sure cookie is sent over HTTPS (true only for production environment)
+// 3. `httpOnly`: Prevents JavaScript from accessing the cookie (important for security)
+
+// Cookie options object
+let cookieOptions = {
+    expires: cookieExpirationDate,  // Cookie expiration date
+    secure: process.env.NODE_ENV === "production",  // Only true in production (use HTTPS)
+    httpOnly: true  // Prevents access via JavaScript
+};
+
+// To send cookie with response:
+res.cookie('JSON web token', token, cookieOptions);
+
+// If testing without HTTPS, `secure: true` won't work (cookie won't be sent).
+// Therefore, `secure` option is only active in production.
+
+// Testing:
+// Create a user and check response in Postman. Look for the cookie in the "Cookie" tab of the response.
+// Expected result: a cookie named "JSON web token" with value, expiration date, httpOnly, and secure flags.
+
+// Remove password from output:
+// In createSendToken function, make sure to remove user.password from the response.
+user.password = undefined;  // Removes the password from the response output.
+
+// Cookie behavior:
+// If a new cookie with the same name is sent, it overwrites the previous one.
+
+// Conclusion:
+// This is how you send a JWT as an HTTP-only cookie. More details will be covered when building dynamic websites later.
+
+
+=========================================================
+================ Implementing Rate Limiting
+
+// Notes on Rate Limiting in Express.js
+
+1. **Introduction to Rate Limiting**:
+   - Rate limiting helps prevent the same IP from making too many requests to the API.
+   - It helps to prevent attacks like denial of service or brute force attacks.
+   - The rate limiter will count requests from an IP and block further requests if a limit is exceeded.
+
+2. **Global Middleware Implementation**:
+   - We implement rate limiting as a global middleware function.
+   - This is done in `app.js` using the Express Rate Limit package.
+
+3. **Installing the Package**:
+   - Install the package via npm:
+     ```
+     npm i express-rate-limit
+     ```
+
+4. **Require and Setup**:
+   - In `app.js`, require the `express-rate-limit` package:
+     ```js
+     const rateLimit = require('express-rate-limit');
+     ```
+
+5. **Creating the Rate Limiter**:
+   - Create a rate limiter using the `rateLimit` function:
+     ```js
+     const limiter = rateLimit({
+       max: 100,  // Maximum requests per IP
+       windowMs: 60 * 60 * 1000,  // Time window in milliseconds (1 hour)
+       message: 'Too many requests from this IP, please try again in an hour.'
+     });
+     ```
+
+6. **Configuration Explanation**:
+   - `max`: Defines the maximum number of requests allowed in the time window (e.g., 100 requests per hour).
+   - `windowMs`: Time window in milliseconds (1 hour = 60 minutes * 60 seconds * 1000 milliseconds).
+   - `message`: Custom message to be sent when the limit is exceeded.
+
+7. **Applying the Middleware**:
+   - Apply the rate limiter to the `/api` route using `app.use`:
+     ```js
+     app.use('/api', limiter);
+     ```
+
+8. **Testing the Rate Limiting**:
+   - After setting up the rate limiter, make requests to see how the rate limit is applied.
+   - The headers `RateLimit-Limit` and `RateLimit-Remaining` show the total requests allowed and remaining requests.
+
+9. **Headers**:
+   - `RateLimit-Limit`: Displays the maximum number of requests allowed (e.g., 100).
+   - `RateLimit-Remaining`: Shows how many requests are left for the current time window.
+   - `RateLimit-Reset`: The timestamp for when the rate limit will reset.
+
+10. **App Restart and Rate Limit Reset**:
+    - If the app is restarted, the rate limit is reset as well.
+    - Example: After restarting the app, the remaining requests go back to the maximum.
+
+11. **Error Handling**:
+    - If the rate limit is exceeded, the response status is set to `429 Too Many Requests`.
+    - The error message displayed is "Too many requests from this IP".
+
+12. **Use Cases for Rate Limiting**:
+    - Preventing Denial of Service (DoS) attacks.
+    - Preventing brute force attacks on login attempts.
+
+13. **Conclusion**:
+    - Rate limiting is easy to implement with `express-rate-limit`.
+    - Customize the rate limits based on your application's needs to prevent abuse without affecting legitimate users.
+
+=========================================================
+================ Setting Security HTTP Headers
+
+// Notes on Setting HTTP Security Headers with Helmet
+
+1. **Introduction to Security Headers**:
+   - In this video, we will set important HTTP security headers using the `helmet` package.
+   - Helmet is a standard in Express development to implement security best practices.
+   - Express does not have all the security measures out of the box, so we need to manually add them.
+
+2. **Installing Helmet**:
+   - Install Helmet via npm:
+     ```
+     npm i helmet
+     ```
+
+3. **Setting up Helmet in Middleware**:
+   - Require `helmet` in `app.js`:
+     ```js
+     const helmet = require('helmet');
+     ```
+   - Call `helmet()` in `app.use` to add it as middleware:
+     ```js
+     app.use(helmet());
+     ```
+
+4. **Best Practice for Helmet Usage**:
+   - It’s best to add Helmet early in the middleware stack to ensure the headers are set as early as possible.
+   - Add it as the first middleware function:
+     ```js
+     app.use(helmet());  // Placing it at the beginning of the middleware stack
+     ```
+
+5. **Middleware Stack Naming**:
+   - As the middleware stack grows, it's a good idea to give each middleware a name for clarity, e.g.,:
+     ```js
+     // Example: naming the middleware
+     app.use(helmet()); // security HTTP headers
+     ```
+
+6. **Body Data Size Limiting**:
+   - We can also limit the amount of data coming in the request body using the `body-parser` middleware.
+   - Set a limit of 10 kilobytes for the incoming JSON body:
+     ```js
+     app.use(express.json({ limit: '10kb' }));
+     ```
+
+7. **Static File Serving Middleware**:
+   - Another middleware to serve static files:
+     ```js
+     app.use(express.static('public'));
+     ```
+
+8. **Helmet Headers**:
+   - After using Helmet, make a request and inspect the headers.
+   - Helmet adds 14 new security-related headers, including:
+     - `Strict-Transport-Security`
+     - `X-Content-Type-Options`
+     - `X-XSS-Protection`
+     - `X-Frame-Options`
+     - `Content-Security-Policy`
+     - `Referrer-Policy`
+
+9. **Helmet Documentation**:
+   - Helmet is a collection of 14 smaller middleware functions.
+   - Some middlewares are enabled by default, and others can be turned on if needed.
+   - Documentation: Visit the [Helmet GitHub repository](https://github.com/helmetjs/helmet) to explore all the available middlewares.
+
+10. **Conclusion**:
+    - Using Helmet in an Express app is a simple and effective way to add essential security headers to prevent vulnerabilities.
+    - Helmet handles multiple security concerns automatically, ensuring a safer Express application.
+
+=========================================================
+================ Data Sanitization
+
+
+1. React Project Setup:
+   - Use Vite for fast React development setup.
+   - Install necessary dependencies:
+     npm install react-router-dom axios
+
+2. Routing:
+   - Use React Router for routing:
+     - Create a Routes.js file for route management.
+     - HomePage, ProductPage, and CartPage routes.
+   - Import Routes.js into App.js:
+     import Routes from './Routes';
+     <Routes />
+
+3. Components:
+   - Header.jsx: Main navigation bar with logo, search bar, and cart icon.
+     - Use Flexbox or Grid for layout.
+   - ProductList.jsx: Display list of products with filtering options.
+   - Cart.jsx: Handle user’s cart items and display checkout options.
+
+4. State Management:
+   - Use React’s `useState` for managing product data and cart state.
+   - Store cart data in LocalStorage for persistence.
+   
+5. API calls:
+   - Axios to fetch products from an external API or static JSON file.
+   - Example: axios.get('api/products')
+
+6. Styling:
+   - Use TailwindCSS or styled-components for UI styling.
+   - Ensure responsive design (e.g., 2-columns layout for desktop, single column for mobile).
+
+7. Form Handling:
+   - Use `useState` for form inputs (e.g., adding product to cart).
+   - Manage form submission with inline handlers.
+
+8. Error Handling:
+   - Use `try-catch` blocks when making API calls.
+   - Display fallback messages when data is not loaded or an error occurs.
+
+9. Testing:
+   - Use Jest or React Testing Library for testing components.
+   - Mock API responses for component testing.
+
+10. Deployment:
+    - Host on Netlify or Vercel for quick deployment.
+    - Set up Continuous Integration for automated testing and deployment.
+
+Note: This is a basic structure to get you started with a React project. Customize based on your specific requirements.
+
+
+=========================================================
+================ Preventing Parameter Pollution
+
+
+// Notes on Preventing Parameter Pollution with HPP Middleware
+
+1. **Introduction to Parameter Pollution**:
+   - In this video, we will prevent parameter pollution using the `HPP` package.
+   - Parameter pollution happens when multiple values for the same query parameter cause errors, as seen in the "sort" parameter.
+
+2. **Error Example**:
+   - In Postman, we try to add multiple values for the `sort` parameter (`sort=duration&sort=price`), which is not handled correctly by the app.
+   - The error occurs when the API tries to split the `sort` property expecting a string, but it ends up as an array with values `['duration', 'price']`.
+   - This results in the error: `.querystring.sort.split is not a function`.
+
+3. **Attackers & Parameter Pollution**:
+   - This is a potential security issue that attackers can exploit to cause unwanted behavior in the application.
+   
+4. **Installing HPP (HTTP Parameter Pollution)**:
+   - Install the `hpp` middleware via npm:
+     ```
+     npm i hpp
+     ```
+
+5. **Using HPP Middleware**:
+   - Require and use the `hpp` middleware in `app.js`:
+     ```js
+     const hpp = require('hpp');
+     app.use(hpp());
+     ```
+   - This will clear up the query string and prevent parameter pollution.
+
+6. **Testing After HPP Middleware**:
+   - After adding the middleware, the issue is resolved. The `sort` parameter now uses only the last value, i.e., `price`.
+   - The application now sorts by price without errors.
+
+7. **Allowing Duplicates for Specific Parameters**:
+   - In some cases, we might want to allow duplicates for certain parameters, like `duration`.
+   - For example, we might want to search for tours with multiple durations (e.g., `duration=5&duration=9`).
+   - To allow this, we need to whitelist the parameters where duplicates are allowed.
+
+8. **Whitelist Parameters in HPP**:
+   - Pass a whitelist array to the `hpp` middleware to specify which fields can have duplicates:
+     ```js
+     app.use(hpp({
+       whitelist: ['duration']
+     }));
+     ```
+   - This allows duplicates for `duration` while preventing others from being duplicated.
+
+9. **Adding More Parameters to Whitelist**:
+   - To allow duplicates for more parameters, such as `ratingsQuantity`, `maxGroupSize`, and `price`, add them to the whitelist array:
+     ```js
+     app.use(hpp({
+       whitelist: ['duration', 'ratingsQuantity', 'maxGroupSize', 'price']
+     }));
+     ```
+   - This will enable duplicates for these parameters while still preventing others from being polluted.
+
+10. **Manual Whitelisting**:
+    - While it may seem repetitive to manually define these fields, it keeps the implementation simple.
+    - We can also explore more complex solutions for dynamically generating the whitelist, but this is a simple approach for now.
+
+11. **Conclusion of the Section**:
+    - This concludes the authentication, authorization, and security section.
+    - You can experiment with the security measures discussed earlier or move on to the next section, where we'll focus on advanced MongoDB concepts and data modeling.
+
+12. **Next Section**:
+    - The next section will be an exciting one, where we'll dive deeper into MongoDB and advanced data modeling techniques.
