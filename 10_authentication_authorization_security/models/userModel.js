@@ -26,13 +26,13 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Please Tell us your name.'],
+    required: [true, 'Please Tell us your password.'],
     minLength: 8,
     select: false,
   },
   passwordConfirm: {
     type: String,
-    required: [true, 'Please confirm your name.'],
+    required: [true, 'Please confirm your passwordConfirm.'],
     minLength: 8,
     select: false,
     validate: {
@@ -46,11 +46,21 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password') || this.isNew) return next();
   this.passwordChangedAt = Date.now() - 1500;
+  next();
+});
+
+userSchema.pre(/^find/, async function (next) {
+  this.find({ active: { $ne: false } });
   next();
 });
 

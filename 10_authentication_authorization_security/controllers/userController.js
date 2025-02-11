@@ -1,10 +1,20 @@
 const fs = require('fs');
 const catchAsync = require('../utils/catchAsync');
 const User = require('../models/userModel');
+const AppError = require('../utils/appError');
 
 const users = JSON.parse(
   fs.readFileSync(`${__dirname}/../dev-data/data/users.json`)
 );
+
+const filterObj = (obj, ...allowed) => {
+  const newObj = {};
+  Object.keys(obj).forEach((el) => {
+    if (allowed.includes(el)) newObj[el] = obj[el];
+  });
+
+  return newObj;
+};
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const users = await User.find();
@@ -105,3 +115,40 @@ exports.deleteUser = (req, res) => {
     }
   );
 };
+
+exports.updateMe = catchAsync(async (req, res, next) => {
+  if (req.body.password || req.body.passwordConfirm) {
+    return next(
+      new AppError(
+        'This route is not for password update. use "/updateMyPassword"',
+        400
+      )
+    );
+  }
+
+  const filteredBody = filterObj(req.body, 'name', 'email');
+
+  const updateduser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!updateduser) {
+    return res.status(404).json({
+      message: 'user Not Found',
+    });
+  }
+  return res.status(201).json({
+    message: 'User info updated successfully',
+    data: { updateduser },
+  });
+});
+
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false });
+
+  return res.status(204).json({
+    message: 'User deleted successfully',
+    data: null,
+  });
+});
