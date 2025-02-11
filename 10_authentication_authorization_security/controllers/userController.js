@@ -1,17 +1,22 @@
 const fs = require('fs');
+const catchAsync = require('../utils/catchAsync');
+const User = require('../models/userModel');
 
 const users = JSON.parse(
-  fs.readFileSync(`${__dirname}/../dev-data/data/users.json`),
+  fs.readFileSync(`${__dirname}/../dev-data/data/users.json`)
 );
 
-exports.getAllUsers = (req, res) => {
-  return res.status(200).json({
-    message: 'Users fetched successfully',
-    requestAt: req.requestTime,
-    result: users.length,
-    data: { users },
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  const users = await User.find();
+  // SEND RESPONSE
+  res.status(200).json({
+    status: 'success',
+    results: users.length,
+    data: {
+      users,
+    },
   });
-};
+});
 
 exports.checkBody = (req, res, next, id) => {
   if (!req.body.name || req.body.orice) {
@@ -35,7 +40,7 @@ exports.createUser = (req, res) => {
         message: 'user added successfully',
         data: { user },
       });
-    },
+    }
   );
 };
 
@@ -80,7 +85,7 @@ exports.updateUser = (req, res) => {
         message: 'User added successfully',
         data: { updatedUser },
       });
-    },
+    }
   );
 };
 
@@ -97,6 +102,6 @@ exports.deleteUser = (req, res) => {
         message: 'user deleted successfully',
         data: null,
       });
-    },
+    }
   );
 };
